@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>USDC Flex</title>
+<meta name="description" content="Deixe seu USDC rendendo e saque por PIX quando quiser.">
+<meta name="theme-color" content="#0b0f14">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="USDC Flex">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+:root{--bg:#0b0f14;--card:#131a22;--card2:#18222d;--line:#1f2a36;--tx:#e8eef5;--mut:#8a9bb0;--ac:#22c55e;--ac2:#16a34a;--err:#f87171;
+--top:env(safe-area-inset-top,0px);--bot:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overscroll-behavior-y:none}
+body{min-height:100dvh}
+.app{max-width:520px;margin:0 auto;padding:calc(16px + var(--top)) 16px calc(92px + var(--bot))}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+header h1{font-size:18px;margin:0;display:flex;align-items:center;gap:8px}
+header img{width:26px;height:26px;border-radius:7px}
+.tag{font-size:11px;background:#3b2f0b;color:#fbbf24;padding:3px 8px;border-radius:99px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;margin-bottom:14px}
+.hero{background:linear-gradient(160deg,#143324 0%,#131a22 60%);border-color:#1d3a2a}
+.lbl{color:var(--mut);font-size:13px}
+.bal{font-size:36px;font-weight:700;letter-spacing:-.5px;font-variant-numeric:tabular-nums;margin-top:2px}
+.bal small{font-size:16px;color:var(--mut);font-weight:500}
+.row{display:flex;justify-content:space-between;gap:10px;margin-top:10px;align-items:baseline}
+.row b{font-variant-numeric:tabular-nums}
+.g{color:var(--ac)}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.act{padding:14px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--tx);font-weight:600;font-size:15px;cursor:pointer;display:flex;flex-direction:column;gap:2px;text-align:left}
+.act span{font-size:12px;color:var(--mut);font-weight:400}
+.act.p{background:var(--ac);border-color:var(--ac);color:#04210f}
+.act.p span{color:#0b4a24}
+label{display:block}
+input{width:100%;padding:14px;margin:6px 0 12px;border-radius:12px;border:1px solid var(--line);background:#0d131a;color:var(--tx);font-size:16px}
+input:focus{outline:2px solid var(--ac2)}
+.btn{width:100%;padding:15px;border:0;border-radius:14px;background:var(--ac);color:#04210f;font-weight:700;font-size:16px;cursor:pointer}
+.btn:active{transform:scale(.99)}
+.btn:disabled{opacity:.5}
+.btn.sec{background:var(--card2);color:var(--tx);border:1px solid var(--line)}
+.link{background:none;border:0;color:var(--ac);cursor:pointer;font-size:14px;padding:4px 0}
+.msg{margin-top:12px;font-size:14px;word-break:break-word}
+.err{color:var(--err)}
+.hide{display:none!important}
+.tx{display:flex;justify-content:space-between;gap:10px;padding:12px 0;border-top:1px solid var(--line);font-size:14px}
+.tx:first-child{border-top:0}
+.tx .s{color:var(--mut);font-size:12px}
+.tx .r{text-align:right;white-space:nowrap}
+code{background:#0d131a;padding:6px 8px;border-radius:8px;font-size:12px;word-break:break-all;display:block}
+.note{font-size:12px;color:var(--mut);margin-top:10px}
+h2{font-size:15px;margin:0 0 6px}
+.install{display:flex;gap:10px;align-items:center;justify-content:space-between;background:var(--card2)}
+.install p{margin:0;font-size:13px}
+.install .btn{width:auto;padding:10px 14px;font-size:14px}
+.x{background:none;border:0;color:var(--mut);font-size:20px;cursor:pointer;padding:4px 8px}
+nav{position:fixed;left:0;right:0;bottom:0;background:rgba(11,15,20,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line);padding-bottom:var(--bot);z-index:10}
+nav .in{max-width:520px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+nav button{background:none;border:0;color:var(--mut);padding:10px 0 8px;font-size:11px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer}
+nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+nav button.on{color:var(--ac)}
+.view{display:none}.view.on{display:block}
+.offline{background:#3b2f0b;color:#fbbf24;font-size:13px;text-align:center;padding:6px;border-radius:10px;margin-bottom:12px}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1><img src="/icons/icon-192.png" alt="">USDC Flex</h1>
+    <span id="sb" class="tag hide">SANDBOX</span>
+  </header>
+  <div id="off" class="offline hide">Sem conexão — saldo pode estar desatualizado</div>
+
+  <div id="inst" class="card install hide">
+    <p id="instTxt"><b>Instale o app</b><br><span class="lbl">Abra direto da tela inicial, em tela cheia.</span></p>
+    <div style="display:flex;align-items:center"><button id="instBtn" class="btn">Instalar</button><button id="instX" class="x" aria-label="Fechar">×</button></div>
+  </div>
+
+  <!-- INÍCIO -->
+  <section id="v-home" class="view on">
+    <div class="card hero">
+      <div class="lbl">Saldo rendendo</div>
+      <div class="bal"><span id="bal">0.000000</span> <small>USDC</small></div>
+      <div class="lbl" id="brlEst">≈ R$ 0,00</div>
+      <div class="row"><span class="lbl">Rendimento acumulado</span><b class="g" id="earn">+0.000000</b></div>
+      <div class="row"><span class="lbl">Taxa atual</span><b id="apy">—</b></div>
+      <div class="row"><span class="lbl">Rende por dia</span><b class="g" id="perday">—</b></div>
+    </div>
+    <div class="actions">
+      <button class="act p" data-go="sacar">Sacar via PIX<span>Sem carência, a qualquer hora</span></button>
+      <button class="act" data-go="depositar">Depositar<span>USDC na rede Base</span></button>
+    </div>
+    <div class="card">
+      <h2>Últimas movimentações</h2>
+      <div id="histMini"><div class="lbl">Nenhuma movimentação.</div></div>
+      <button class="link" data-go="extrato">Ver extrato completo</button>
+    </div>
+  </section>
+
+  <!-- SACAR -->
+  <section id="v-sacar" class="view">
+    <div class="card">
+      <div class="lbl">Disponível para saque</div>
+      <div class="bal" style="font-size:26px"><span id="avail">0.000000</span> <small>USDC</small></div>
+    </div>
+    <div class="card">
+      <label class="lbl" for="wAmt">Valor em USDC</label>
+      <input id="wAmt" inputmode="decimal" placeholder="0.00" autocomplete="off">
+      <button class="link" id="wAll" type="button">Sacar tudo</button>
+      <div class="lbl" id="wQuote" style="margin:6px 0 14px">Você recebe: —</div>
+      <label class="lbl" for="wKey">Chave PIX (CPF, CNPJ, e-mail, +55 telefone ou aleatória)</label>
+      <input id="wKey" placeholder="Chave PIX" autocomplete="off" autocapitalize="none" spellcheck="false">
+      <button class="btn" id="wBtn">Sacar agora</button>
+      <div class="msg" id="wMsg" role="status"></div>
+      <div class="note">O valor é debitado na hora e enviado por PIX. Se o envio falhar, o saldo é estornado automaticamente.</div>
+    </div>
+  </section>
+
+  <!-- DEPOSITAR -->
+  <section id="v-depositar" class="view">
+    <div class="card">
+      <h2>Depositar USDC</h2>
+      <div class="lbl" style="margin-bottom:10px">Envie USDC pela rede <b id="dNet">Base</b> para o endereço abaixo. Envie só USDC nessa rede.</div>
+      <code id="dAddr"></code>
+      <button class="btn sec" id="dCopy" style="margin-top:12px">Copiar endereço</button>
+      <div class="note">O saldo começa a render assim que o depósito é confirmado.</div>
+    </div>
+    <div class="card hide" id="sim">
+      <h2>Sandbox</h2>
+      <label class="lbl" for="sAmt">Simular depósito (USDC)</label>
+      <input id="sAmt" inputmode="decimal" value="100">
+      <button class="btn" id="sBtn">Simular depósito</button>
+    </div>
+  </section>
+
+  <!-- EXTRATO -->
+  <section id="v-extrato" class="view">
+    <div class="card">
+      <h2>Extrato</h2>
+      <div id="hist"><div class="lbl">Nenhuma movimentação.</div></div>
+    </div>
+  </section>
+</div>
+
+<nav><div class="in">
+  <button data-go="home" class="on"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Início</button>
+  <button data-go="sacar"><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 20h16"/></svg>Sacar</button>
+  <button data-go="depositar"><svg viewBox="0 0 24 24"><path d="M12 15V3m0 0L8 7m4-4l4 4M4 20h16"/></svg>Depositar</button>
+  <button data-go="extrato"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6"/></svg>Extrato</button>
+</div></nav>
+
+<script>
+const $=id=>document.getElementById(id);
+const f6=n=>n.toFixed(6), brl=n=>n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let S=null,t0=0,lastRate=null;
+
+async function api(path,opt){
+  const r=await fetch(path,opt); const j=await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(j.error||'erro'); return j;
+}
+
+/* ---------- navegação ---------- */
+function go(tab){
+  if(!$('v-'+tab)) tab='home';
+  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on',v.id==='v-'+tab));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.go===tab));
+  try{history.replaceState(null,'',tab==='home'?'/':'/?tab='+tab)}catch(e){}
+  window.scrollTo(0,0);
+}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-go]'); if(t) go(t.dataset.go)});
+
+/* ---------- dados ---------- */
+async function load(){
+  try{
+    S=await api('/api/account'); t0=Date.now(); $('off').classList.add('hide');
+  }catch(e){ $('off').classList.remove('hide'); return }
+  $('apy').textContent=(S.apy*100).toFixed(2)+'% a.a.';
+  $('perday').textContent='+'+(S.balance*(Math.pow(1+S.apy,1/365)-1)).toFixed(4)+' USDC';
+  $('dAddr').textContent=S.deposit.address; $('dNet').textContent=S.deposit.network;
+  if(S.sandbox){$('sb').classList.remove('hide');$('sim').classList.remove('hide')}
+  renderHist();
+  try{const q=await api('/api/quote?usdc=1');lastRate=q.rate}catch(e){}
+}
+function current(){
+  if(!S) return 0;
+  return S.balance*Math.exp(Math.log1p(S.apy)*((Date.now()-t0)/1000)/31536000);
+}
+function tick(){
+  if(S){
+    const b=current();
+    $('bal').textContent=f6(b); $('avail').textContent=f6(b);
+    $('earn').textContent='+'+f6(Math.max(0,b-S.principal));
+    $('brlEst').textContent=lastRate?'≈ '+brl(b*lastRate):'';
+  }
+  setTimeout(()=>requestAnimationFrame(tick),100);
+}
+function txHTML(e){
+  const dt=new Date(e.at).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+  if(e.type==='deposit') return `<div class="tx"><div>Depósito<div class="s">${dt}</div></div><div class="r"><b class="g">+${e.usdc.toFixed(2)} USDC</b></div></div>`;
+  const st={completed:'Concluído',pending:'Processando',failed:'Falhou (estornado)'}[e.status]||e.status;
+  return `<div class="tx"><div>PIX ${esc(e.pix_key)}<div class="s">${dt} · ${st}</div></div><div class="r"><b>−${e.usdc.toFixed(2)} USDC</b><div class="s">${brl(e.brl)}</div></div></div>`;
+}
+function renderHist(){
+  if(!S.entries.length) return;
+  $('hist').innerHTML=S.entries.map(txHTML).join('');
+  $('histMini').innerHTML=S.entries.slice(0,3).map(txHTML).join('');
+}
+
+/* ---------- saque ---------- */
+let qt,all=false;
+$('wAmt').addEventListener('input',()=>{
+  all=false; clearTimeout(qt);
+  qt=setTimeout(async()=>{
+    const v=parseFloat($('wAmt').value.replace(',','.'));
+    if(!(v>0)){$('wQuote').textContent='Você recebe: —';return}
+    try{const q=await api('/api/quote?usdc='+v);$('wQuote').textContent=`Você recebe: ${brl(q.brl)} (1 USDC = ${brl(q.rate)})`}
+    catch(e){$('wQuote').textContent='Você recebe: —'}
+  },250);
+});
+$('wAll').onclick=()=>{
+  const v=current().toFixed(6); $('wAmt').value=v;
+  all=true; clearTimeout(qt);
+  api('/api/quote?usdc='+v).then(q=>{$('wQuote').textContent=`Você recebe: ${brl(q.brl)} (1 USDC = ${brl(q.rate)})`}).catch(()=>{});
+};
+$('wBtn').onclick=async()=>{
+  const msg=$('wMsg'); msg.className='msg'; msg.textContent='';
+  const usdc=parseFloat($('wAmt').value.replace(',','.'));
+  if(!all && !(usdc>0)){msg.className='msg err';msg.textContent='Informe o valor.';return}
+  $('wBtn').disabled=true; $('wBtn').textContent='Enviando PIX…';
+  try{
+    const e=await api('/api/withdraw',{method:'POST',
+      headers:{'Content-Type':'application/json','Idempotency-Key':crypto.randomUUID()},
+      body:JSON.stringify({usdc:all?0:usdc,all,pix_key:$('wKey').value})});
+    if(e.status==='completed'){
+      msg.className='msg g'; msg.textContent=`PIX de ${brl(e.brl)} enviado! ID: ${e.e2e_id}`;
+      if(navigator.vibrate) navigator.vibrate(60);
+      $('wAmt').value=''; $('wQuote').textContent='Você recebe: —'; all=false;
+    } else { msg.className='msg err'; msg.textContent=e.error||'Falha no PIX.' }
+    await load();
+  }catch(er){msg.className='msg err';msg.textContent=er.message}
+  $('wBtn').disabled=false; $('wBtn').textContent='Sacar agora';
+};
+
+/* ---------- depósito ---------- */
+$('dCopy').onclick=async()=>{
+  try{await navigator.clipboard.writeText($('dAddr').textContent);$('dCopy').textContent='Copiado ✓'}
+  catch(e){$('dCopy').textContent='Selecione e copie manualmente'}
+  setTimeout(()=>$('dCopy').textContent='Copiar endereço',2000);
+};
+$('sBtn').onclick=async()=>{
+  try{await api('/api/deposit',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({usdc:parseFloat($('sAmt').value.replace(',','.'))})});await load();go('home')}
+  catch(e){alert(e.message)}
+};
+
+/* ---------- instalação (PWA) ---------- */
+let deferred=null;
+const standalone=window.matchMedia('(display-mode: standalone)').matches||navigator.standalone;
+const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
+function dismissed(){try{return localStorage.getItem('instX')==='1'}catch(e){return false}}
+function showInstall(){ if(!standalone&&!dismissed()) $('inst').classList.remove('hide') }
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;showInstall()});
+window.addEventListener('appinstalled',()=>$('inst').classList.add('hide'));
+$('instBtn').onclick=async()=>{
+  if(deferred){deferred.prompt();await deferred.userChoice;deferred=null;$('inst').classList.add('hide')}
+};
+$('instX').onclick=()=>{$('inst').classList.add('hide');try{localStorage.setItem('instX','1')}catch(e){}};
+if(ios&&!standalone){
+  $('instTxt').innerHTML='<b>Instale o app</b><br><span class="lbl">Toque em Compartilhar e depois em “Adicionar à Tela de Início”.</span>';
+  $('instBtn').classList.add('hide'); showInstall();
+}
+window.addEventListener('offline',()=>$('off').classList.remove('hide'));
+window.addEventListener('online',load);
+if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));
+
+/* ---------- start ---------- */
+go(new URLSearchParams(location.search).get('tab')||'home');
+load(); tick();
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) load() });
+</script>
+</body>
+</html>
