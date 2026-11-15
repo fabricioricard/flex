@@ -21,9 +21,6 @@ const MSG = {
   'auth/popup-blocked': 'O navegador bloqueou a janela do Google. Libere pop-ups e tente de novo.',
   'auth/unauthorized-domain': 'Domínio não autorizado no Firebase (Authentication > Settings > Authorized domains).',
   'auth/operation-not-allowed': 'Método de login não ativado no Firebase.',
-  'auth/invalid-action-code': 'Link inválido ou já usado. Peça um novo.',
-  'auth/expired-action-code': 'Link expirado. Peça um novo.',
-  'auth/quota-exceeded': 'Limite de e-mails atingido. Tente mais tarde.',
 };
 
 async function main() {
@@ -32,7 +29,6 @@ async function main() {
   const {
     getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword,
     signInWithPopup, GoogleAuthProvider, signOut, sendPasswordResetEmail,
-    sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink,
   } = await import(SDK + 'firebase-auth.js');
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
@@ -65,35 +61,12 @@ async function main() {
     await sendPasswordResetEmail(auth, email);
     say('Enviamos um link para redefinir a senha, se o e-mail tiver conta.', true);
   });
-  $('aLink').onclick = () => run(async () => {
-    const [email] = creds();
-    if (!email) { say('Digite seu e-mail acima para receber o link.', false); return; }
-    await sendSignInLinkToEmail(auth, email, { url: location.origin + '/', handleCodeInApp: true });
-    try { localStorage.setItem('emailForSignIn', email); } catch (e) {}
-    say('Enviamos um link de acesso para ' + email + '. Abra-o neste mesmo aparelho.', true);
-  });
   $('out').onclick = () => signOut(auth);
 
   onAuthStateChanged(auth, (u) => {
     if (u) window.startApp(u.email || '');
     else window.showAuth();
   });
-
-  // Voltou pelo link do e-mail: conclui o login.
-  if (isSignInWithEmailLink(auth, location.href)) {
-    let email = null;
-    try { email = localStorage.getItem('emailForSignIn'); } catch (e) {}
-    if (!email) email = window.prompt('Confirme seu e-mail para entrar');
-    if (email) {
-      try {
-        await signInWithEmailLink(auth, email.trim(), location.href);
-        try { localStorage.removeItem('emailForSignIn'); } catch (e) {}
-      } catch (e) {
-        say(MSG[e.code] !== undefined ? MSG[e.code] : 'Não foi possível entrar com o link. Peça um novo.', false);
-      }
-    }
-    history.replaceState(null, '', '/');
-  }
 }
 
 if (!configured) {
