@@ -39,7 +39,7 @@ async function main() {
 
   const say = (text, ok) => {
     const m = $('aMsg');
-    m.className = 'msg ' + (ok ? 'g' : 'err');
+    m.className = 'msg ' + (ok ? 'ok' : 'err');
     m.textContent = text;
   };
   const busy = (on) => document.querySelectorAll('#v-auth button').forEach((b) => (b.disabled = on));

@@ -3,109 +3,203 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>USDC Flex</title>
-<meta name="description" content="Deixe seu USDC rendendo e saque por PIX quando quiser.">
-<meta name="theme-color" content="#0b0f14">
+<title>Flex</title>
+<meta name="description" content="Seu dólar digital rendendo todo dia, com saque no Pix quando você quiser.">
+<meta name="theme-color" content="#0B0A1E">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="USDC Flex">
+<meta name="apple-mobile-web-app-title" content="Flex">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preload" href="/fonts/unbounded-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/figtree-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <style>
-:root{--bg:#0b0f14;--card:#131a22;--card2:#18222d;--line:#1f2a36;--tx:#e8eef5;--mut:#8a9bb0;--ac:#22c55e;--ac2:#16a34a;--err:#f87171;
---top:env(safe-area-inset-top,0px);--bot:env(safe-area-inset-bottom,0px)}
+@font-face{font-family:"Unbounded";src:url(/fonts/unbounded-latin-wght-normal.woff2) format("woff2");font-weight:200 900;font-display:swap}
+@font-face{font-family:"Figtree";src:url(/fonts/figtree-latin-wght-normal.woff2) format("woff2");font-weight:300 900;font-display:swap}
+
+:root{
+  --night:#0B0A1E; --s1:#14132C; --s2:#1C1B3A; --s3:#272550;
+  --line:rgba(255,255,255,.08); --line2:rgba(255,255,255,.16);
+  --tx:#F3F2FF; --mut:#9C9AC4;
+  --blue:#4A86FF; --violet:#8B5CFF; --teal:#2EE6C5; --pink:#FF7391; --amber:#FFC24D;
+  --flow:linear-gradient(120deg,#4A86FF 0%,#8B5CFF 50%,#2EE6C5 100%);
+  --display:"Unbounded",ui-rounded,system-ui,sans-serif;
+  --body:"Figtree",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --top:env(safe-area-inset-top,0px); --bot:env(safe-area-inset-bottom,0px);
+}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overscroll-behavior-y:none}
+html,body{margin:0;background:var(--night);color:var(--tx);font:16px/1.45 var(--body);overscroll-behavior-y:none;-webkit-font-smoothing:antialiased}
 body{min-height:100dvh}
-.app{max-width:520px;margin:0 auto;padding:calc(16px + var(--top)) 16px calc(92px + var(--bot))}
-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
-header h1{font-size:18px;margin:0;display:flex;align-items:center;gap:8px}
-header img{width:26px;height:26px;border-radius:7px}
-.tag{font-size:11px;background:#3b2f0b;color:#fbbf24;padding:3px 8px;border-radius:99px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;margin-bottom:14px}
-.hero{background:linear-gradient(160deg,#143324 0%,#131a22 60%);border-color:#1d3a2a}
-.lbl{color:var(--mut);font-size:13px}
-.bal{font-size:36px;font-weight:700;letter-spacing:-.5px;font-variant-numeric:tabular-nums;margin-top:2px}
-.bal small{font-size:16px;color:var(--mut);font-weight:500}
-.row{display:flex;justify-content:space-between;gap:10px;margin-top:10px;align-items:baseline}
-.row b{font-variant-numeric:tabular-nums}
-.g{color:var(--ac)}
-.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
-.act{padding:14px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--tx);font-weight:600;font-size:15px;cursor:pointer;display:flex;flex-direction:column;gap:2px;text-align:left}
-.act span{font-size:12px;color:var(--mut);font-weight:400}
-.act.p{background:var(--ac);border-color:var(--ac);color:#04210f}
-.act.p span{color:#0b4a24}
-label{display:block}
-input{width:100%;padding:14px;margin:6px 0 12px;border-radius:12px;border:1px solid var(--line);background:#0d131a;color:var(--tx);font-size:16px}
-input:focus{outline:2px solid var(--ac2)}
-.btn{width:100%;padding:15px;border:0;border-radius:14px;background:var(--ac);color:#04210f;font-weight:700;font-size:16px;cursor:pointer}
-.btn:active{transform:scale(.99)}
-.btn:disabled{opacity:.5}
-.btn.sec{background:var(--card2);color:var(--tx);border:1px solid var(--line)}
-.link{background:none;border:0;color:var(--ac);cursor:pointer;font-size:14px;padding:4px 0}
-.msg{margin-top:12px;font-size:14px;word-break:break-word}
-.err{color:var(--err)}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
 .hide{display:none!important}
-.tx{display:flex;justify-content:space-between;gap:10px;padding:12px 0;border-top:1px solid var(--line);font-size:14px}
-.tx:first-child{border-top:0}
-.tx .s{color:var(--mut);font-size:12px}
-.tx .r{text-align:right;white-space:nowrap}
-code{background:#0d131a;padding:6px 8px;border-radius:8px;font-size:12px;word-break:break-all;display:block}
-.note{font-size:12px;color:var(--mut);margin-top:10px}
-h2{font-size:15px;margin:0 0 6px}
-.install{display:flex;gap:10px;align-items:center;justify-content:space-between;background:var(--card2)}
-.install p{margin:0;font-size:13px}
-.install .btn{width:auto;padding:10px 14px;font-size:14px}
-.x{background:none;border:0;color:var(--mut);font-size:20px;cursor:pointer;padding:4px 8px}
-nav{position:fixed;left:0;right:0;bottom:0;background:rgba(11,15,20,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line);padding-bottom:var(--bot);z-index:10}
-nav .in{max-width:520px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
-nav button{background:none;border:0;color:var(--mut);padding:10px 0 8px;font-size:11px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer}
-nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-nav button.on{color:var(--ac)}
+
+.app{max-width:480px;margin:0 auto;padding:calc(14px + var(--top)) 16px calc(112px + var(--bot))}
+
+/* ---------- topo ---------- */
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;min-height:40px}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:700;font-size:22px;letter-spacing:-.04em}
+.brand img{width:34px;height:34px;border-radius:10px;display:block}
+.hdr-r{display:flex;align-items:center;gap:10px;min-width:0}
+.tag{font-size:12px;font-weight:600;background:rgba(255,194,77,.14);color:var(--amber);padding:4px 10px;border-radius:99px;white-space:nowrap}
+.who{font-size:12px;color:var(--mut);max-width:132px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.link{background:none;border:0;color:var(--teal);cursor:pointer;font-size:14px;font-weight:600;padding:8px 2px;min-height:40px}
+
+/* ---------- avisos ---------- */
+.notice{display:flex;gap:12px;align-items:center;justify-content:space-between;background:var(--s2);border:1px solid var(--line);border-radius:18px;padding:12px 14px;margin-bottom:14px;font-size:14px}
+.notice p{margin:0}.notice small{color:var(--mut);font-size:13px}
+.offline{background:rgba(255,194,77,.12);border:0;color:var(--amber);justify-content:center;text-align:center;font-weight:500}
+.x{background:none;border:0;color:var(--mut);font-size:22px;line-height:1;cursor:pointer;padding:6px 10px;min-height:40px}
+
+/* ---------- blocos ---------- */
+.card{background:var(--s1);border:1px solid var(--line);border-radius:24px;padding:20px;margin-bottom:14px}
 .view{display:none}.view.on{display:block}
-.hdr-r{display:flex;align-items:center;gap:10px}
-.who{font-size:12px;color:var(--mut);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.btn.g2{background:#fff;color:#222;border:0}
-.sep{display:flex;align-items:center;gap:10px;color:var(--mut);font-size:12px;margin:14px 0}
-.sep::before,.sep::after{content:"";flex:1;height:1px;background:var(--line)}
+h2{font-family:var(--display);font-weight:600;font-size:20px;letter-spacing:-.03em;margin:0 0 6px;line-height:1.2}
+.lbl{color:var(--mut);font-size:14px}
+.k{color:var(--mut);font-size:13px}
+.pos{color:var(--teal)}
+.note{font-size:13px;color:var(--mut);margin-top:12px}
+.msg{margin-top:14px;font-size:14px;word-break:break-word}
+.err{color:var(--pink)}.ok{color:var(--teal)}
+
+/* ---------- saldo (destaque) ---------- */
+.hero{position:relative;overflow:hidden;border-radius:30px;padding:22px 22px 18px;margin-bottom:14px;border:1.5px solid transparent;
+  background:linear-gradient(var(--s1),var(--s1)) padding-box,var(--flow) border-box}
+.hero::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(280px circle at var(--mx,78%) var(--my,-10%),rgba(255,255,255,.13),transparent 62%)}
+.bal{font-family:var(--display);font-weight:700;font-size:clamp(30px,9.4vw,42px);letter-spacing:-.04em;line-height:1.1;margin:6px 0 2px;white-space:nowrap}
+.bal .dec{font-size:.5em;font-weight:500;color:var(--mut);letter-spacing:0}
+.bal .dec i{display:inline-block;width:.8em;text-align:center;font-style:normal}
+.bal .dec b{font-weight:500;display:inline-block;width:.35em;text-align:center}
+.sub{display:flex;align-items:center;gap:10px;color:var(--mut);font-size:15px}
+.unit{font-weight:700;color:var(--tx);background:var(--s3);border-radius:99px;padding:2px 10px;font-size:13px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);margin-top:18px;border-top:1px solid var(--line);padding-top:14px}
+.stats>div{display:flex;flex-direction:column;gap:2px;padding:0 12px;min-width:0}
+.stats>div:first-child{padding-left:0}
+.stats>div+div{border-left:1px solid var(--line)}
+.stats b{font-size:clamp(13px,4vw,15px);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ---------- botões ---------- */
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.act{display:flex;flex-direction:column;gap:2px;text-align:left;padding:16px;border-radius:22px;border:1px solid var(--line2);background:var(--s1);cursor:pointer;font-weight:700;font-size:16px;min-height:76px;transition:transform .12s}
+.act span{font-size:13px;font-weight:500;color:var(--mut)}
+.act:active{transform:scale(.97)}
+.act.p{background:var(--flow);border-color:transparent;color:var(--night)}
+.act.p span{color:rgba(11,10,30,.72)}
+.btn{display:block;width:100%;min-height:52px;padding:14px;border:0;border-radius:18px;background:var(--flow);color:var(--night);font-weight:800;font-size:16px;cursor:pointer;transition:transform .12s,opacity .12s}
+.btn:active{transform:scale(.98)}
+.btn:disabled{opacity:.55;cursor:default}
+.btn.sec{background:var(--s2);color:var(--tx);border:1px solid var(--line2);font-weight:700}
+.btn.light{background:#fff;color:#1a1a2e}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.offline{background:#3b2f0b;color:#fbbf24;font-size:13px;text-align:center;padding:6px;border-radius:10px;margin-bottom:12px}
+
+/* ---------- campos ---------- */
+label.lbl{display:block;margin:0 0 6px}
+input{width:100%;min-height:52px;padding:14px 16px;border-radius:16px;border:1px solid var(--line2);background:var(--night);font-size:16px}
+input::placeholder{color:#6d6b99}
+input:focus{outline:2px solid var(--teal);outline-offset:0;border-color:transparent}
+.field{margin-bottom:14px}
+.sep{display:flex;align-items:center;gap:12px;color:var(--mut);font-size:13px;margin:16px 0}
+.sep::before,.sep::after{content:"";flex:1;height:1px;background:var(--line)}
+
+/* ---------- sacar ---------- */
+.amt{display:flex;align-items:baseline;gap:10px;border-bottom:2px solid var(--line2);padding-bottom:6px;margin:4px 0 14px}
+.amt:focus-within{border-color:var(--teal)}
+.amt input{font-family:var(--display);font-weight:700;font-size:34px;letter-spacing:-.04em;border:0;background:transparent;padding:6px 0;min-height:0;outline:none;width:100%}
+.amt input:focus{outline:none}
+.amt span{font-weight:700;color:var(--mut)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{min-height:40px;padding:0 16px;border-radius:99px;border:1px solid var(--line2);background:var(--s2);font-weight:700;font-size:14px;cursor:pointer}
+.chip:active{background:var(--s3)}
+.recv{display:flex;justify-content:space-between;align-items:center;gap:12px;border-radius:20px;padding:14px 16px;margin-top:16px;background:rgba(46,230,197,.09);border:1px solid rgba(46,230,197,.28)}
+.recv .k{display:block}
+.recv strong{font-family:var(--display);font-size:20px;font-weight:700;letter-spacing:-.03em;color:var(--teal)}
+.recv small{color:var(--mut);font-size:12px;text-align:right}
+.help{font-size:13px;color:var(--mut);margin-top:6px}
+
+/* ---------- depositar ---------- */
+.net{display:inline-flex;align-items:center;gap:8px;background:rgba(74,134,255,.14);color:#8fb3ff;font-weight:700;font-size:13px;padding:5px 12px;border-radius:99px;margin-bottom:12px}
+.net::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--blue)}
+code{display:block;background:var(--night);border:1px solid var(--line);padding:14px;border-radius:16px;font:500 13px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;word-break:break-all;margin-bottom:12px}
+
+/* ---------- extrato ---------- */
+.tx{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.tx:first-child{border-top:0}
+.ic{flex:none;width:40px;height:40px;border-radius:14px;display:grid;place-items:center}
+.ic svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ic.in{background:rgba(46,230,197,.13);color:var(--teal)}
+.ic.out{background:rgba(139,92,255,.18);color:#b49bff}
+.tx .m{flex:1;min-width:0}
+.tx .m b{display:block;font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tx .m span{font-size:12px;color:var(--mut)}
+.tx .r{text-align:right;white-space:nowrap}
+.tx .r b{display:block;font-weight:700;font-size:15px}
+.tx .r span{font-size:12px;color:var(--mut)}
+.st-ok{color:var(--teal)}.st-wait{color:var(--amber)}.st-bad{color:var(--pink)}
+.empty{color:var(--mut);font-size:14px;padding:6px 0 2px}
+
+/* ---------- entrada ---------- */
+.intro{padding:6px 2px 22px}
+.intro h1{font-family:var(--display);font-weight:700;font-size:clamp(26px,8vw,32px);letter-spacing:-.045em;line-height:1.12;margin:0 0 10px}
+.intro p{margin:0;color:var(--mut);font-size:16px;max-width:34ch}
+
+/* ---------- menu inferior ---------- */
+nav{position:fixed;z-index:10;left:50%;transform:translateX(-50%);bottom:calc(12px + var(--bot));width:min(calc(100% - 24px),456px);
+  display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:6px;border-radius:26px;
+  background:rgba(28,27,58,.82);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid var(--line2)}
+nav button{background:none;border:0;border-radius:20px;color:var(--mut);padding:9px 0 7px;font-size:12px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;min-height:56px}
+nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+nav button.on{color:var(--tx);background:var(--s3)}
+nav button.on svg{stroke:var(--teal)}
+
+@media (max-width:460px){.who{display:none}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
 <div class="app">
   <header>
-    <h1><img src="/icons/icon-192.png" alt="">USDC Flex</h1>
+    <div class="brand"><img src="/icons/icon-192.png" alt="">Flex</div>
     <div class="hdr-r">
-      <span id="sb" class="tag hide">SANDBOX</span>
+      <span id="sb" class="tag hide">Modo teste</span>
       <span id="who" class="who hide"></span>
       <button id="out" class="link hide" type="button">Sair</button>
     </div>
   </header>
-  <div id="off" class="offline hide">Sem conexão — saldo pode estar desatualizado</div>
 
-  <div id="inst" class="card install hide">
-    <p id="instTxt"><b>Instale o app</b><br><span class="lbl">Abra direto da tela inicial, em tela cheia.</span></p>
-    <div style="display:flex;align-items:center"><button id="instBtn" class="btn">Instalar</button><button id="instX" class="x" aria-label="Fechar">×</button></div>
+  <div id="off" class="notice offline hide" role="status">Sem conexão. O saldo pode estar desatualizado.</div>
+
+  <div id="inst" class="notice hide">
+    <p id="instTxt"><b>Instale o Flex</b><br><small>Abra direto da tela inicial, em tela cheia.</small></p>
+    <div style="display:flex;align-items:center;flex:none">
+      <button id="instBtn" class="btn" type="button" style="width:auto;min-height:40px;padding:0 16px;font-size:14px;border-radius:14px">Instalar</button>
+      <button id="instX" class="x" type="button" aria-label="Fechar">×</button>
+    </div>
   </div>
 
-  <!-- LOGIN -->
+  <!-- ENTRAR -->
   <section id="v-auth" class="view">
+    <div class="intro">
+      <h1>Seu dólar rende todo dia.</h1>
+      <p>Saque no Pix a qualquer hora, sem carência.</p>
+    </div>
     <div class="card">
-      <h2>Entre na sua conta</h2>
-      <div class="lbl" style="margin-bottom:10px">Seu saldo em USDC rende todo dia e você saca por PIX quando quiser.</div>
-      <label class="lbl" for="aEmail">E-mail</label>
-      <input id="aEmail" type="email" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" placeholder="voce@exemplo.com">
-      <label class="lbl" for="aPass">Senha</label>
-      <input id="aPass" type="password" autocomplete="current-password" placeholder="Sua senha">
+      <div class="field">
+        <label class="lbl" for="aEmail">E-mail</label>
+        <input id="aEmail" type="email" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" placeholder="voce@exemplo.com">
+      </div>
+      <div class="field">
+        <label class="lbl" for="aPass">Senha</label>
+        <input id="aPass" type="password" autocomplete="current-password" placeholder="Sua senha">
+      </div>
       <div class="row2">
         <button class="btn" id="aIn" type="button">Entrar</button>
         <button class="btn sec" id="aUp" type="button">Criar conta</button>
       </div>
       <div class="sep">ou</div>
-      <button class="btn g2" id="aG" type="button">Entrar com Google</button>
+      <button class="btn light" id="aG" type="button">Continuar com Google</button>
       <button class="link" id="aReset" type="button" style="margin-top:12px">Esqueci minha senha</button>
       <div class="msg" id="aMsg" role="status"></div>
     </div>
@@ -113,41 +207,51 @@ nav button.on{color:var(--ac)}
 
   <!-- INÍCIO -->
   <section id="v-home" class="view">
-    <div class="card hero">
-      <div class="lbl">Saldo rendendo</div>
-      <div class="bal"><span id="bal">0.000000</span> <small>USDC</small></div>
-      <div class="lbl" id="brlEst">≈ R$ 0,00</div>
-      <div class="row"><span class="lbl">Rendimento acumulado</span><b class="g" id="earn">+0.000000</b></div>
-      <div class="row"><span class="lbl">Taxa atual</span><b id="apy">—</b></div>
-      <div class="row"><span class="lbl">Rende por dia</span><b class="g" id="perday">—</b></div>
+    <div class="hero" id="hero">
+      <div class="lbl">Seu saldo</div>
+      <div class="bal" id="bal">0<span class="dec">,000000</span></div>
+      <div class="sub"><span class="unit">USDC</span><span id="brlEst">≈ R$ 0,00</span></div>
+      <div class="stats">
+        <div><span class="k">Rendeu</span><b class="pos" id="earn">+0,000000</b></div>
+        <div><span class="k">Taxa ao ano</span><b id="apy">—</b></div>
+        <div><span class="k">Por dia</span><b class="pos" id="perday">—</b></div>
+      </div>
     </div>
     <div class="actions">
-      <button class="act p" data-go="sacar">Sacar via PIX<span>Sem carência, a qualquer hora</span></button>
-      <button class="act" data-go="depositar">Depositar<span>USDC na rede Base</span></button>
+      <button class="act p" data-go="sacar" type="button">Sacar no Pix<span>Cai na hora</span></button>
+      <button class="act" data-go="depositar" type="button">Depositar<span>USDC na rede Base</span></button>
     </div>
     <div class="card">
       <h2>Últimas movimentações</h2>
-      <div id="histMini"><div class="lbl">Nenhuma movimentação.</div></div>
-      <button class="link" data-go="extrato">Ver extrato completo</button>
+      <div id="histMini"><div class="empty">Quando você depositar ou sacar, aparece aqui.</div></div>
+      <button class="link" data-go="extrato" type="button" style="margin-top:6px">Ver extrato completo</button>
     </div>
   </section>
 
   <!-- SACAR -->
   <section id="v-sacar" class="view">
     <div class="card">
-      <div class="lbl">Disponível para saque</div>
-      <div class="bal" style="font-size:26px"><span id="avail">0.000000</span> <small>USDC</small></div>
+      <h2>Sacar no Pix</h2>
+      <div class="lbl">Disponível: <b id="avail" style="color:var(--tx)">0,000000</b> USDC</div>
+      <div class="amt">
+        <input id="wAmt" inputmode="decimal" placeholder="0,00" autocomplete="off" aria-label="Valor em USDC">
+        <span>USDC</span>
+      </div>
+      <div class="chips">
+        <button class="chip" data-pct="25" type="button">25%</button>
+        <button class="chip" data-pct="50" type="button">50%</button>
+        <button class="chip" data-pct="75" type="button">75%</button>
+        <button class="chip" id="wAll" data-pct="100" type="button">Tudo</button>
+      </div>
+      <div class="recv" id="wQuote"><div><span class="k">Você recebe</span><strong>R$ 0,00</strong></div></div>
     </div>
     <div class="card">
-      <label class="lbl" for="wAmt">Valor em USDC</label>
-      <input id="wAmt" inputmode="decimal" placeholder="0.00" autocomplete="off">
-      <button class="link" id="wAll" type="button">Sacar tudo</button>
-      <div class="lbl" id="wQuote" style="margin:6px 0 14px">Você recebe: —</div>
-      <label class="lbl" for="wKey">Chave PIX (CPF, CNPJ, e-mail, +55 telefone ou aleatória)</label>
-      <input id="wKey" placeholder="Chave PIX" autocomplete="off" autocapitalize="none" spellcheck="false">
-      <button class="btn" id="wBtn">Sacar agora</button>
+      <label class="lbl" for="wKey">Chave Pix</label>
+      <input id="wKey" placeholder="CPF, e-mail, telefone…" autocomplete="off" autocapitalize="none" spellcheck="false">
+      <div class="help">Aceita CPF, CNPJ, e-mail, telefone (+55…) ou chave aleatória.</div>
+      <button class="btn" id="wBtn" type="button" style="margin-top:16px">Sacar agora</button>
       <div class="msg" id="wMsg" role="status"></div>
-      <div class="note">O valor é debitado na hora e enviado por PIX. Se o envio falhar, o saldo é estornado automaticamente.</div>
+      <div class="note">O Pix sai na hora. Se der erro, o valor volta para o seu saldo.</div>
     </div>
   </section>
 
@@ -155,16 +259,16 @@ nav button.on{color:var(--ac)}
   <section id="v-depositar" class="view">
     <div class="card">
       <h2>Depositar USDC</h2>
-      <div class="lbl" style="margin-bottom:10px">Envie USDC pela rede <b id="dNet">Base</b> para o endereço abaixo. Envie só USDC nessa rede.</div>
+      <div class="net">Rede <span id="dNet">Base</span></div>
       <code id="dAddr"></code>
-      <button class="btn sec" id="dCopy" style="margin-top:12px">Copiar endereço</button>
-      <div class="note">O saldo começa a render assim que o depósito é confirmado.</div>
+      <button class="btn sec" id="dCopy" type="button">Copiar endereço</button>
+      <div class="note">Envie só USDC nessa rede. O saldo começa a render quando o depósito é confirmado.</div>
     </div>
     <div class="card hide" id="sim">
-      <h2>Sandbox</h2>
+      <h2>Modo teste</h2>
       <label class="lbl" for="sAmt">Simular depósito (USDC)</label>
-      <input id="sAmt" inputmode="decimal" value="100">
-      <button class="btn" id="sBtn">Simular depósito</button>
+      <input id="sAmt" inputmode="decimal" value="100" style="margin-bottom:14px">
+      <button class="btn" id="sBtn" type="button">Simular depósito</button>
     </div>
   </section>
 
@@ -172,23 +276,25 @@ nav button.on{color:var(--ac)}
   <section id="v-extrato" class="view">
     <div class="card">
       <h2>Extrato</h2>
-      <div id="hist"><div class="lbl">Nenhuma movimentação.</div></div>
+      <div id="hist"><div class="empty">Nenhuma movimentação ainda.</div></div>
     </div>
   </section>
 </div>
 
-<nav id="nav" class="hide"><div class="in">
-  <button data-go="home" class="on"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Início</button>
-  <button data-go="sacar"><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 20h16"/></svg>Sacar</button>
-  <button data-go="depositar"><svg viewBox="0 0 24 24"><path d="M12 15V3m0 0L8 7m4-4l4 4M4 20h16"/></svg>Depositar</button>
-  <button data-go="extrato"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6"/></svg>Extrato</button>
-</div></nav>
+<nav id="nav" class="hide" aria-label="Principal">
+  <button data-go="home" class="on" type="button"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Início</button>
+  <button data-go="sacar" type="button"><svg viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></svg>Sacar</button>
+  <button data-go="depositar" type="button"><svg viewBox="0 0 24 24"><path d="M17 7L7 17M15 17H7V9"/></svg>Depositar</button>
+  <button data-go="extrato" type="button"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6"/></svg>Extrato</button>
+</nav>
 
 <script>
 const $=id=>document.getElementById(id);
-const f6=n=>n.toFixed(6), brl=n=>n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const nf=(n,d)=>n.toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d});
+const brl=n=>n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let S=null,t0=0,lastRate=null;
+const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let S=null,t0=0,lastRate=null,introAt=0,fitLen=0;
 
 async function api(path,opt){
   opt=opt||{};
@@ -211,20 +317,10 @@ function go(tab){
 }
 document.addEventListener('click',e=>{const t=e.target.closest('[data-go]'); if(t) go(t.dataset.go)});
 
-/* ---------- dados ---------- */
-async function load(){
-  try{
-    S=await api('/api/account'); t0=Date.now(); $('off').classList.add('hide');
-  }catch(e){
-    $('off').textContent=(e instanceof TypeError)?'Sem conexão — saldo pode estar desatualizado':e.message;
-    $('off').classList.remove('hide'); return
-  }
-  $('apy').textContent=(S.apy*100).toFixed(2)+'% a.a.';
-  $('perday').textContent='+'+(S.balance*(Math.pow(1+S.apy,1/365)-1)).toFixed(4)+' USDC';
-  $('dAddr').textContent=S.deposit.address; $('dNet').textContent=S.deposit.network;
-  if(S.sandbox){$('sb').classList.remove('hide');$('sim').classList.remove('hide')}
-  renderHist();
-  try{const q=await api('/api/quote?usdc=1');lastRate=q.rate}catch(e){}
+/* ---------- saldo ---------- */
+function balHTML(v){
+  const [i,d]=v.toFixed(6).split('.');
+  return nf(Number(i),0)+'<span class="dec"><b>,</b>'+d.split('').map(c=>'<i>'+c+'</i>').join('')+'</span>';
 }
 function current(){
   if(!S) return 0;
@@ -232,18 +328,53 @@ function current(){
 }
 function tick(){
   if(S){
-    const b=current();
-    $('bal').textContent=f6(b); $('avail').textContent=f6(b);
-    $('earn').textContent='+'+f6(Math.max(0,b-S.principal));
-    $('brlEst').textContent=lastRate?'≈ '+brl(b*lastRate):'';
+    const real=current();
+    let shown=real;
+    if(introAt){
+      const k=Math.min(1,(performance.now()-introAt)/1000);
+      shown=real*(1-Math.pow(1-k,3));
+      if(k>=1) introAt=0;
+    }
+    const bal=$('bal'); bal.innerHTML=balHTML(shown);
+    const len=String(Math.floor(real)).length;
+    if(len!==fitLen){
+      fitLen=len; bal.style.fontSize='';
+      if(bal.scrollWidth>bal.clientWidth){
+        bal.style.fontSize=(parseFloat(getComputedStyle(bal).fontSize)*bal.clientWidth/bal.scrollWidth*0.97)+'px';
+      }
+    }
+    $('avail').textContent=nf(real,6);
+    $('earn').textContent='+'+nf(Math.max(0,real-S.principal),6);
+    $('brlEst').textContent=lastRate?'≈ '+brl(real*lastRate):'';
   }
   setTimeout(()=>requestAnimationFrame(tick),100);
 }
+
+/* ---------- dados ---------- */
+let firstLoad=true;
+async function load(){
+  try{
+    S=await api('/api/account'); t0=Date.now(); $('off').classList.add('hide');
+  }catch(e){
+    $('off').textContent=(e instanceof TypeError)?'Sem conexão. O saldo pode estar desatualizado.':e.message;
+    $('off').classList.remove('hide'); return
+  }
+  if(firstLoad && !reduceMotion && S.balance>0){ introAt=performance.now(); }
+  firstLoad=false;
+  $('apy').textContent=nf(S.apy*100,2)+'%';
+  const pd=S.balance*(Math.pow(1+S.apy,1/365)-1); $('perday').textContent='+'+nf(pd,pd>=100?2:4);
+  $('dAddr').textContent=S.deposit.address; $('dNet').textContent=S.deposit.network;
+  if(S.sandbox){$('sb').classList.remove('hide');$('sim').classList.remove('hide')}
+  renderHist();
+  try{const q=await api('/api/quote?usdc=1');lastRate=q.rate}catch(e){}
+}
+const I_IN='<svg viewBox="0 0 24 24"><path d="M17 7L7 17M15 17H7V9"/></svg>';
+const I_OUT='<svg viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></svg>';
 function txHTML(e){
   const dt=new Date(e.at).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
-  if(e.type==='deposit') return `<div class="tx"><div>Depósito<div class="s">${dt}</div></div><div class="r"><b class="g">+${e.usdc.toFixed(2)} USDC</b></div></div>`;
-  const st={completed:'Concluído',pending:'Processando',failed:'Falhou (estornado)'}[e.status]||e.status;
-  return `<div class="tx"><div>PIX ${esc(e.pix_key)}<div class="s">${dt} · ${st}</div></div><div class="r"><b>−${e.usdc.toFixed(2)} USDC</b><div class="s">${brl(e.brl)}</div></div></div>`;
+  if(e.type==='deposit') return `<div class="tx"><div class="ic in">${I_IN}</div><div class="m"><b>Depósito</b><span>${dt}</span></div><div class="r"><b class="pos">+${nf(e.usdc,2)} USDC</b></div></div>`;
+  const st={completed:['Concluído','st-ok'],pending:['Processando','st-wait'],failed:['Falhou, valor devolvido','st-bad']}[e.status]||[e.status,''];
+  return `<div class="tx"><div class="ic out">${I_OUT}</div><div class="m"><b>Pix para ${esc(e.pix_key)}</b><span>${dt} · <span class="${st[1]}">${st[0]}</span></span></div><div class="r"><b>−${nf(e.usdc,2)} USDC</b><span>${brl(e.brl)}</span></div></div>`;
 }
 function renderHist(){
   if(!S.entries.length) return;
@@ -253,34 +384,40 @@ function renderHist(){
 
 /* ---------- saque ---------- */
 let qt,all=false;
-$('wAmt').addEventListener('input',()=>{
-  all=false; clearTimeout(qt);
+function showQuote(q){
+  $('wQuote').innerHTML=q
+    ? `<div><span class="k">Você recebe</span><strong>${brl(q.brl)}</strong></div><small>1 USDC = ${brl(q.rate)}</small>`
+    : '<div><span class="k">Você recebe</span><strong>R$ 0,00</strong></div>';
+}
+function updateQuote(){
+  clearTimeout(qt);
   qt=setTimeout(async()=>{
     const v=parseFloat($('wAmt').value.replace(',','.'));
-    if(!(v>0)){$('wQuote').textContent='Você recebe: —';return}
-    try{const q=await api('/api/quote?usdc='+v);$('wQuote').textContent=`Você recebe: ${brl(q.brl)} (1 USDC = ${brl(q.rate)})`}
-    catch(e){$('wQuote').textContent='Você recebe: —'}
+    if(!(v>0)){showQuote(null);return}
+    try{showQuote(await api('/api/quote?usdc='+v))}catch(e){showQuote(null)}
   },250);
-});
-$('wAll').onclick=()=>{
-  const v=current().toFixed(6); $('wAmt').value=v;
-  all=true; clearTimeout(qt);
-  api('/api/quote?usdc='+v).then(q=>{$('wQuote').textContent=`Você recebe: ${brl(q.brl)} (1 USDC = ${brl(q.rate)})`}).catch(()=>{});
-};
+}
+$('wAmt').addEventListener('input',()=>{all=false;updateQuote()});
+document.querySelectorAll('[data-pct]').forEach(b=>b.addEventListener('click',()=>{
+  const pct=+b.dataset.pct, cur=current();
+  if(pct===100){ all=true; $('wAmt').value=cur.toFixed(6).replace('.',','); }
+  else { all=false; $('wAmt').value=(Math.floor(cur*pct)/100).toFixed(2).replace('.',','); }
+  updateQuote();
+}));
 $('wBtn').onclick=async()=>{
   const msg=$('wMsg'); msg.className='msg'; msg.textContent='';
   const usdc=parseFloat($('wAmt').value.replace(',','.'));
-  if(!all && !(usdc>0)){msg.className='msg err';msg.textContent='Informe o valor.';return}
-  $('wBtn').disabled=true; $('wBtn').textContent='Enviando PIX…';
+  if(!all && !(usdc>0)){msg.className='msg err';msg.textContent='Digite quanto você quer sacar.';return}
+  $('wBtn').disabled=true; $('wBtn').textContent='Enviando Pix…';
   try{
     const e=await api('/api/withdraw',{method:'POST',
       headers:{'Content-Type':'application/json','Idempotency-Key':crypto.randomUUID()},
       body:JSON.stringify({usdc:all?0:usdc,all,pix_key:$('wKey').value})});
     if(e.status==='completed'){
-      msg.className='msg g'; msg.textContent=`PIX de ${brl(e.brl)} enviado! ID: ${e.e2e_id}`;
+      msg.className='msg ok'; msg.textContent=`Pix de ${brl(e.brl)} enviado. ID ${e.e2e_id}`;
       if(navigator.vibrate) navigator.vibrate(60);
-      $('wAmt').value=''; $('wQuote').textContent='Você recebe: —'; all=false;
-    } else { msg.className='msg err'; msg.textContent=e.error||'Falha no PIX.' }
+      $('wAmt').value=''; showQuote(null); all=false;
+    } else { msg.className='msg err'; msg.textContent=e.error||'O Pix não saiu. Tente de novo.' }
     await load();
   }catch(er){msg.className='msg err';msg.textContent=er.message}
   $('wBtn').disabled=false; $('wBtn').textContent='Sacar agora';
@@ -288,8 +425,8 @@ $('wBtn').onclick=async()=>{
 
 /* ---------- depósito ---------- */
 $('dCopy').onclick=async()=>{
-  try{await navigator.clipboard.writeText($('dAddr').textContent);$('dCopy').textContent='Copiado ✓'}
-  catch(e){$('dCopy').textContent='Selecione e copie manualmente'}
+  try{await navigator.clipboard.writeText($('dAddr').textContent);$('dCopy').textContent='Endereço copiado'}
+  catch(e){$('dCopy').textContent='Selecione e copie o endereço'}
   setTimeout(()=>$('dCopy').textContent='Copiar endereço',2000);
 };
 $('sBtn').onclick=async()=>{
@@ -298,12 +435,21 @@ $('sBtn').onclick=async()=>{
   catch(e){alert(e.message)}
 };
 
+/* ---------- brilho do cartão (segue o dedo) ---------- */
+const hero=$('hero');
+hero.addEventListener('pointermove',e=>{
+  const r=hero.getBoundingClientRect();
+  hero.style.setProperty('--mx',(e.clientX-r.left)+'px');
+  hero.style.setProperty('--my',(e.clientY-r.top)+'px');
+});
+hero.addEventListener('pointerleave',()=>{hero.style.removeProperty('--mx');hero.style.removeProperty('--my')});
+
 /* ---------- instalação (PWA) ---------- */
 let deferred=null;
-const standalone=window.matchMedia('(display-mode: standalone)').matches||navigator.standalone;
+const standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone;
 const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
 function dismissed(){try{return localStorage.getItem('instX')==='1'}catch(e){return false}}
-function showInstall(){ if(!standalone&&!dismissed()) $('inst').classList.remove('hide') }
+function showInstall(){ if(!standalone&&!dismissed()&&signedIn) $('inst').classList.remove('hide') }
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;showInstall()});
 window.addEventListener('appinstalled',()=>$('inst').classList.add('hide'));
 $('instBtn').onclick=async()=>{
@@ -311,26 +457,27 @@ $('instBtn').onclick=async()=>{
 };
 $('instX').onclick=()=>{$('inst').classList.add('hide');try{localStorage.setItem('instX','1')}catch(e){}};
 if(ios&&!standalone){
-  $('instTxt').innerHTML='<b>Instale o app</b><br><span class="lbl">Toque em Compartilhar e depois em “Adicionar à Tela de Início”.</span>';
-  $('instBtn').classList.add('hide'); showInstall();
+  $('instTxt').innerHTML='<b>Instale o Flex</b><br><small>Toque em Compartilhar e depois em “Adicionar à Tela de Início”.</small>';
+  $('instBtn').classList.add('hide');
 }
 window.addEventListener('offline',()=>$('off').classList.remove('hide'));
 window.addEventListener('online',()=>{ if(signedIn) load() });
 if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));
 
-/* ---------- start ---------- */
+/* ---------- início do app / login ---------- */
 let ticking=false, signedIn=false, decided=false;
 window.startApp=function(email){
   signedIn=true; decided=true;
-  S=null; $('nav').classList.remove('hide');
+  S=null; firstLoad=true; $('nav').classList.remove('hide');
   if(email){$('who').textContent=email;$('who').classList.remove('hide');$('out').classList.remove('hide')}
   go(new URLSearchParams(location.search).get('tab')||'home');
   load();
   if(!ticking){ticking=true;tick()}
+  if(ios&&!standalone&&!dismissed()) $('inst').classList.remove('hide'); else if(deferred) showInstall();
 };
 window.showAuth=function(){
   signedIn=false; decided=true; S=null; lastRate=null;
-  $('nav').classList.add('hide'); $('who').classList.add('hide'); $('out').classList.add('hide');
+  $('nav').classList.add('hide'); $('who').classList.add('hide'); $('out').classList.add('hide'); $('inst').classList.add('hide');
   $('aPass').value=''; $('off').classList.add('hide');
   document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on',v.id==='v-auth'));
   window.scrollTo(0,0);
