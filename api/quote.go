@@ -3,7 +3,7 @@ package handler
 import (
 	"net/http"
 
-	"usdcflex/internal/core"
+	"usdcflex/core"
 )
 
 // Handler atende GET /api/quote na Vercel.
