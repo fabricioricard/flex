@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -18,7 +19,7 @@ import (
 const (
 	minWithdrawUSDC = 1.0
 	minBRL          = 5.0
-	demoUser        = "demo" // TODO: trocar por autenticação real (Firebase Auth / JWT)
+	demoUser        = "demo" // usado só em desenvolvimento local, sem FIREBASE_PROJECT_ID
 )
 
 type App struct {
@@ -28,6 +29,7 @@ type App struct {
 	pix     PixProvider
 	sandbox bool
 	initErr error
+	auth    *Verifier
 }
 
 type httpErr struct {
@@ -83,6 +85,11 @@ func New() *App {
 	default:
 		a.store = &Store{b: NewFileBackend(envOr("STATE_PATH", "state.json"))}
 	}
+	if pid := os.Getenv("FIREBASE_PROJECT_ID"); pid != "" {
+		a.auth = NewVerifier(pid)
+	} else if os.Getenv("VERCEL") != "" && a.initErr == nil {
+		a.initErr = errors.New("login não configurado (FIREBASE_PROJECT_ID)")
+	}
 	return a
 }
 
@@ -121,18 +128,37 @@ func (a *App) fail(w http.ResponseWriter, err error) {
 	}
 }
 
-// guard valida método HTTP e se o armazenamento está pronto.
-func (a *App) guard(w http.ResponseWriter, r *http.Request, method string) bool {
+// guard valida método HTTP, armazenamento e login; devolve o uid do usuário.
+func (a *App) guard(w http.ResponseWriter, r *http.Request, method string) (string, bool) {
 	if r.Method != method {
 		w.Header().Set("Allow", method)
 		errJSON(w, 405, "método não permitido")
-		return false
+		return "", false
 	}
 	if a.initErr != nil {
 		errJSON(w, 503, a.initErr.Error())
-		return false
+		return "", false
 	}
-	return true
+	return a.userID(w, r)
+}
+
+// userID extrai o uid do token Firebase. Sem verificador (só em dev local),
+// usa a conta demo.
+func (a *App) userID(w http.ResponseWriter, r *http.Request) (string, bool) {
+	if a.auth == nil {
+		return demoUser, true
+	}
+	tok := strings.TrimSpace(strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer "))
+	if tok == "" {
+		errJSON(w, 401, "faça login para continuar")
+		return "", false
+	}
+	uid, err := a.auth.Verify(tok)
+	if err != nil {
+		errJSON(w, 401, "sessão inválida, entre novamente")
+		return "", false
+	}
+	return uid, true
 }
 
 func (a *App) apy() float64 {
@@ -145,12 +171,13 @@ func (a *App) apy() float64 {
 
 // GET /api/account
 func (a *App) HandleAccount(w http.ResponseWriter, r *http.Request) {
-	if !a.guard(w, r, http.MethodGet) {
+	user, ok := a.guard(w, r, http.MethodGet)
+	if !ok {
 		return
 	}
 	apy := a.apy()
 	var resp map[string]any
-	err := a.store.Update(demoUser, func(acc *Account) error {
+	err := a.store.Update(user, func(acc *Account) error {
 		acc.accrue(time.Now(), apy)
 		entries := acc.Entries
 		if len(entries) > 30 {
@@ -183,7 +210,8 @@ func (a *App) HandleAccount(w http.ResponseWriter, r *http.Request) {
 
 // POST /api/deposit  (somente sandbox: simula um depósito)
 func (a *App) HandleSimDeposit(w http.ResponseWriter, r *http.Request) {
-	if !a.guard(w, r, http.MethodPost) {
+	user, ok := a.guard(w, r, http.MethodPost)
+	if !ok {
 		return
 	}
 	if !a.sandbox {
@@ -198,7 +226,7 @@ func (a *App) HandleSimDeposit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	apy := a.apy()
-	err := a.store.Update(demoUser, func(acc *Account) error {
+	err := a.store.Update(user, func(acc *Account) error {
 		now := time.Now()
 		acc.accrue(now, apy)
 		acc.Balance += in.USDC
@@ -230,7 +258,8 @@ func (a *App) HandleQuote(w http.ResponseWriter, r *http.Request) {
 
 // POST /api/withdraw  (header Idempotency-Key obrigatório)
 func (a *App) HandleWithdraw(w http.ResponseWriter, r *http.Request) {
-	if !a.guard(w, r, http.MethodPost) {
+	user, ok := a.guard(w, r, http.MethodPost)
+	if !ok {
 		return
 	}
 	idem := r.Header.Get("Idempotency-Key")
@@ -260,7 +289,7 @@ func (a *App) HandleWithdraw(w http.ResponseWriter, r *http.Request) {
 		id                               string
 		amount, brl, rate, principalPart float64
 	)
-	err = a.store.Update(demoUser, func(acc *Account) error {
+	err = a.store.Update(user, func(acc *Account) error {
 		if eid, ok := acc.Idem[idem]; ok { // requisição repetida
 			if e := acc.entry(eid); e != nil {
 				c := *e
@@ -328,7 +357,7 @@ func (a *App) HandleWithdraw(w http.ResponseWriter, r *http.Request) {
 
 	// Fase 3: confirma ou estorna.
 	var final Entry
-	err = a.store.Update(demoUser, func(acc *Account) error {
+	err = a.store.Update(user, func(acc *Account) error {
 		e := acc.entry(id)
 		if e == nil {
 			return errors.New("lançamento não encontrado")

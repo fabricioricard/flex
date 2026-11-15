@@ -65,6 +65,12 @@ nav button{background:none;border:0;color:var(--mut);padding:10px 0 8px;font-siz
 nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 nav button.on{color:var(--ac)}
 .view{display:none}.view.on{display:block}
+.hdr-r{display:flex;align-items:center;gap:10px}
+.who{font-size:12px;color:var(--mut);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn.g2{background:#fff;color:#222;border:0}
+.sep{display:flex;align-items:center;gap:10px;color:var(--mut);font-size:12px;margin:14px 0}
+.sep::before,.sep::after{content:"";flex:1;height:1px;background:var(--line)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .offline{background:#3b2f0b;color:#fbbf24;font-size:13px;text-align:center;padding:6px;border-radius:10px;margin-bottom:12px}
 </style>
 </head>
@@ -72,7 +78,11 @@ nav button.on{color:var(--ac)}
 <div class="app">
   <header>
     <h1><img src="/icons/icon-192.png" alt="">USDC Flex</h1>
-    <span id="sb" class="tag hide">SANDBOX</span>
+    <div class="hdr-r">
+      <span id="sb" class="tag hide">SANDBOX</span>
+      <span id="who" class="who hide"></span>
+      <button id="out" class="link hide" type="button">Sair</button>
+    </div>
   </header>
   <div id="off" class="offline hide">Sem conexão — saldo pode estar desatualizado</div>
 
@@ -81,8 +91,29 @@ nav button.on{color:var(--ac)}
     <div style="display:flex;align-items:center"><button id="instBtn" class="btn">Instalar</button><button id="instX" class="x" aria-label="Fechar">×</button></div>
   </div>
 
+  <!-- LOGIN -->
+  <section id="v-auth" class="view">
+    <div class="card">
+      <h2>Entre na sua conta</h2>
+      <div class="lbl" style="margin-bottom:10px">Seu saldo em USDC rende todo dia e você saca por PIX quando quiser.</div>
+      <label class="lbl" for="aEmail">E-mail</label>
+      <input id="aEmail" type="email" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" placeholder="voce@exemplo.com">
+      <label class="lbl" for="aPass">Senha</label>
+      <input id="aPass" type="password" autocomplete="current-password" placeholder="Sua senha">
+      <div class="row2">
+        <button class="btn" id="aIn" type="button">Entrar</button>
+        <button class="btn sec" id="aUp" type="button">Criar conta</button>
+      </div>
+      <button class="btn sec" id="aLink" type="button" style="margin-top:10px">Receber link de acesso por e-mail</button>
+      <div class="sep">ou</div>
+      <button class="btn g2" id="aG" type="button">Entrar com Google</button>
+      <button class="link" id="aReset" type="button" style="margin-top:12px">Esqueci minha senha</button>
+      <div class="msg" id="aMsg" role="status"></div>
+    </div>
+  </section>
+
   <!-- INÍCIO -->
-  <section id="v-home" class="view on">
+  <section id="v-home" class="view">
     <div class="card hero">
       <div class="lbl">Saldo rendendo</div>
       <div class="bal"><span id="bal">0.000000</span> <small>USDC</small></div>
@@ -147,7 +178,7 @@ nav button.on{color:var(--ac)}
   </section>
 </div>
 
-<nav><div class="in">
+<nav id="nav" class="hide"><div class="in">
   <button data-go="home" class="on"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Início</button>
   <button data-go="sacar"><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 20h16"/></svg>Sacar</button>
   <button data-go="depositar"><svg viewBox="0 0 24 24"><path d="M12 15V3m0 0L8 7m4-4l4 4M4 20h16"/></svg>Depositar</button>
@@ -161,7 +192,13 @@ const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 let S=null,t0=0,lastRate=null;
 
 async function api(path,opt){
+  opt=opt||{};
+  if(window.getToken){
+    const t=await window.getToken();
+    if(t) opt.headers=Object.assign({},opt.headers,{Authorization:'Bearer '+t});
+  }
   const r=await fetch(path,opt); const j=await r.json().catch(()=>({}));
+  if(r.status===401 && window.signOutNow){ window.signOutNow(); }
   if(!r.ok) throw new Error(j.error||'erro'); return j;
 }
 
@@ -179,7 +216,10 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-go]'); if(
 async function load(){
   try{
     S=await api('/api/account'); t0=Date.now(); $('off').classList.add('hide');
-  }catch(e){ $('off').classList.remove('hide'); return }
+  }catch(e){
+    $('off').textContent=(e instanceof TypeError)?'Sem conexão — saldo pode estar desatualizado':e.message;
+    $('off').classList.remove('hide'); return
+  }
   $('apy').textContent=(S.apy*100).toFixed(2)+'% a.a.';
   $('perday').textContent='+'+(S.balance*(Math.pow(1+S.apy,1/365)-1)).toFixed(4)+' USDC';
   $('dAddr').textContent=S.deposit.address; $('dNet').textContent=S.deposit.network;
@@ -276,13 +316,29 @@ if(ios&&!standalone){
   $('instBtn').classList.add('hide'); showInstall();
 }
 window.addEventListener('offline',()=>$('off').classList.remove('hide'));
-window.addEventListener('online',load);
+window.addEventListener('online',()=>{ if(signedIn) load() });
 if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));
 
 /* ---------- start ---------- */
-go(new URLSearchParams(location.search).get('tab')||'home');
-load(); tick();
-document.addEventListener('visibilitychange',()=>{ if(!document.hidden) load() });
+let ticking=false, signedIn=false, decided=false;
+window.startApp=function(email){
+  signedIn=true; decided=true;
+  S=null; $('nav').classList.remove('hide');
+  if(email){$('who').textContent=email;$('who').classList.remove('hide');$('out').classList.remove('hide')}
+  go(new URLSearchParams(location.search).get('tab')||'home');
+  load();
+  if(!ticking){ticking=true;tick()}
+};
+window.showAuth=function(){
+  signedIn=false; decided=true; S=null; lastRate=null;
+  $('nav').classList.add('hide'); $('who').classList.add('hide'); $('out').classList.add('hide');
+  $('aPass').value=''; $('off').classList.add('hide');
+  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on',v.id==='v-auth'));
+  window.scrollTo(0,0);
+};
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden && signedIn) load() });
+setTimeout(()=>{ if(!decided){ $('off').textContent='Não foi possível carregar o login. Verifique a conexão e recarregue.'; $('off').classList.remove('hide') } },6000);
 </script>
+<script type="module" src="/auth.js"></script>
 </body>
 </html>
