@@ -159,7 +159,7 @@ nav button.on svg{stroke:var(--teal)}
 @keyframes spin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.spin{animation-duration:2.4s}}
 .msg.load{color:var(--mut)}
-.tag-test{display:inline-block;font-size:12px;font-weight:700;background:rgba(255,194,77,.14);color:var(--amber);padding:3px 10px;border-radius:99px}
+.tag-test{display:inline-block;font-size:12px;font-weight:700;background:rgba(46,230,197,.14);color:var(--teal);padding:3px 10px;border-radius:99px}
 .addr{display:flex;align-items:center;gap:10px;background:var(--night);border:1px solid var(--line);border-radius:16px;padding:10px 10px 10px 14px;margin:12px 0}
 .addr code{flex:1;margin:0;padding:0;border:0;background:none;font-size:13px;min-width:0}
 .mini{min-height:36px;padding:0 14px;border-radius:12px;border:1px solid var(--line2);background:var(--s2);font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap}
@@ -257,7 +257,7 @@ nav button.on svg{stroke:var(--teal)}
     </div>
 
     <div id="w-login" class="card hide">
-      <span class="tag-test">Rede de teste</span>
+      <span class="tag-test">Base · dinheiro de verdade</span>
       <h2 style="margin-top:10px">Crie sua carteira</h2>
       <div class="lbl" style="margin-bottom:14px">Uma carteira só sua, que você pode levar para qualquer lugar. Enviamos um código por e-mail para ativar.</div>
       <div class="field">
@@ -275,7 +275,7 @@ nav button.on svg{stroke:var(--teal)}
 
     <div id="w-main" class="hide">
       <div class="card">
-        <span class="tag-test">Rede de teste · Base Sepolia</span>
+        <span class="tag-test">Rede Base · dinheiro de verdade</span>
         <h2 style="margin-top:10px">Sua carteira</h2>
         <div class="addr"><code id="wAddr"></code><button class="mini" id="wCopy" type="button">Copiar</button></div>
         <div class="tiles">
@@ -290,10 +290,9 @@ nav button.on svg{stroke:var(--teal)}
 
       <div class="card">
         <h2>Receber</h2>
-        <div class="lbl">Envie USDC de teste para o endereço acima. Para pegar moedas de teste de graça:</div>
-        <div class="links">
-          <a href="https://faucet.circle.com" target="_blank" rel="noopener">USDC de teste</a>
-          <a href="https://portal.cdp.coinbase.com/products/faucet" target="_blank" rel="noopener">ETH de teste (para as taxas)</a>
+        <div id="wRecvLive">
+          <div class="lbl">Envie <b>USDC na rede Base</b> para o endereço acima. Mantenha também um pouco de ETH na Base para pagar as taxas, que custam centavos.</div>
+          <div class="warn">Enviar de outra rede, ou outro token, pode perder o dinheiro. Comece com um valor pequeno.</div>
         </div>
       </div>
 
@@ -309,7 +308,7 @@ nav button.on svg{stroke:var(--teal)}
         </div>
         <button class="btn" id="wSendUsdc" type="button">Enviar</button>
         <div class="msg" id="wSendMsg" role="status"></div>
-        <div class="note">Você paga a taxa da rede em ETH de teste.</div>
+        <div class="note">Você paga a taxa da rede em ETH, na Base. Envios não podem ser desfeitos.</div>
       </div>
 
       <div class="card">
@@ -534,7 +533,7 @@ $('sBtn').onclick=async()=>{
   catch(e){alert(e.message)}
 };
 
-/* ---------- carteira (rede de teste) ---------- */
+/* ---------- carteira (Base Mainnet) ---------- */
 let W=null, wAddr=null, wBal=null, wBusy=false, wStarted=false;
 const wShow=id=>['w-load','w-off','w-login','w-main'].forEach(x=>$(x).classList.toggle('hide',x!==id));
 const wMsg=(el,text,ok)=>{el.className='msg '+(ok?'ok':'err');el.textContent=text};
@@ -595,7 +594,8 @@ $('wSendUsdc').onclick=async()=>{
   m.textContent='';
   const bad=W.validateSend(to,v,wBal&&wBal.usdcUnits);
   if(bad){wMsg(m,bad,false);return}
-  if(wBal && wBal.ethWei===0n){wMsg(m,'Você precisa de um pouco de ETH de teste para pagar a taxa. Veja “Receber” acima.',false);return}
+  if(wBal && wBal.ethWei===0n){wMsg(m,'Você precisa de um pouco de ETH na rede Base para pagar a taxa. Veja “Receber” acima.',false);return}
+  if(!confirm('Enviar '+v.replace(',','.')+' USDC na rede Base para:\n\n'+to+'\n\nConfira o endereço inteiro. Envios não podem ser desfeitos.')) return;
   wBusy=true; $('wSendUsdc').disabled=true; $('wSendUsdc').textContent='Enviando…';
   wLoad(m,'Enviando. Pode levar alguns segundos.');
   try{

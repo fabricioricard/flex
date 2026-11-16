@@ -1,4 +1,4 @@
-// Módulo da carteira do Flex (rede de teste Base Sepolia).
+// Módulo da carteira do Flex (Base Mainnet).
 // Empacotado por build.mjs em ../public/wallet.js e carregado só quando a pessoa abre a aba Carteira.
 import {
   initialize, signInWithEmail, verifyEmailOTP, getCurrentUser, isSignedIn,
@@ -7,15 +7,16 @@ import {
 import {
   createPublicClient, http, encodeFunctionData, parseUnits, formatUnits, formatEther, isAddress,
 } from 'viem';
-import { baseSepolia } from 'viem/chains';
+import { base } from 'viem/chains';
 
-const USDC = '0x036CbD53842c5426634e7929541eC2318f3dCF7e'; // USDC de teste (Circle) na Base Sepolia
-const ERC20 = [
-  { type: 'function', name: 'balanceOf', stateMutability: 'view', inputs: [{ name: 'a', type: 'address' }], outputs: [{ type: 'uint256' }] },
-  { type: 'function', name: 'transfer', stateMutability: 'nonpayable', inputs: [{ name: 'to', type: 'address' }, { name: 'v', type: 'uint256' }], outputs: [{ type: 'bool' }] },
-];
-
-const client = createPublicClient({ chain: baseSepolia, transport: http('https://sepolia.base.org') });
+// Rede única: Base Mainnet. USDC nativo da Circle (developers.circle.com/stablecoins/usdc-contract-addresses).
+const net = {
+  chain: base, cdp: 'base', label: 'Base',
+  usdc: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+  rpc: 'https://mainnet.base.org', explorer: 'https://basescan.org',
+};
+const USDC = net.usdc;
+const client = createPublicClient({ chain: net.chain, transport: http(net.rpc) });
 let projectId = null;
 let flowId = null;
 
@@ -37,7 +38,7 @@ async function ensureSession() {
 }
 
 const api = {
-  chain: { name: baseSepolia.name, id: baseSepolia.id, explorer: 'https://sepolia.basescan.org' },
+  chain: { name: net.label, id: net.chain.id, explorer: net.explorer },
   usdc: USDC,
 
   async init(id) {
@@ -99,13 +100,13 @@ const api = {
     ]);
     const r = await sendEvmTransaction({
       evmAccount: from,
-      network: 'base-sepolia',
+      network: net.cdp,
       transaction: {
         to: USDC, data, value: 0n, nonce,
         gas: (gas * 12n) / 10n,
         maxFeePerGas: fees.maxFeePerGas,
         maxPriorityFeePerGas: fees.maxPriorityFeePerGas,
-        chainId: baseSepolia.id, type: 'eip1559',
+        chainId: net.chain.id, type: 'eip1559',
       },
     });
     return r.transactionHash;
