@@ -610,7 +610,7 @@ $('wExport').onclick=async()=>{
   exportBusy=true; $('wExport').disabled=true; $('wExport').textContent='Abrindo janela segura…';
   try{
     const r=await W.exportKey($('w-export'),(status,msg)=>{
-      if(status==='ready') { $('wExport').disabled=false; $('wExport').textContent='Fechar'; wMsg(m,'Toque em “Copiar chave privada” abaixo.',true) }
+      if(status==='ready') { $('wExport').disabled=false; $('wExport').textContent='Fechar'; wMsg(m,'Toque em “Copiar chave privada” acima.',true) }
       else if(status==='success') wMsg(m,'Chave copiada. Cole em outra carteira, como a MetaMask, para conferir que é a mesma conta.',true);
       else if(status==='error'){ resetExport(); $('wExport').disabled=false; wMsg(m,msg||'Não foi possível exportar a chave.',false) }
     });

@@ -116,9 +116,20 @@ const api = {
     await ensureSession();
     const addr = await address();
     if (!addr) throw new Error('Carteira não encontrada.');
-    return createEvmKeyExportIframe({
-      address: addr, target, projectId, label: 'Copiar chave privada', onStatusUpdate: onStatus,
+    const r = await createEvmKeyExportIframe({
+      address: addr, target, projectId, label: 'Copiar chave privada', copiedLabel: 'Chave copiada',
+      fullWidth: true, onStatusUpdate: onStatus,
+      theme: {
+        pageBg: '#14132C',            // mesma cor do cartão do Flex
+        buttonBg: '#2EE6C5', buttonBgHover: '#5AF0D6', buttonBgPressed: '#22C4A8', buttonBgFocus: '#2EE6C5',
+        buttonBorder: '#2EE6C5', buttonBorderHover: '#5AF0D6', buttonBorderPressed: '#22C4A8',
+        buttonBorderFocus: '#4A86FF', buttonBorderFocusInset: '#14132C',
+        buttonText: '#0B0A1E', buttonTextHover: '#0B0A1E', buttonTextPressed: '#0B0A1E', buttonTextFocus: '#0B0A1E',
+        buttonBorderRadius: 18, buttonFontSize: 16, buttonFontWeight: 700, buttonSize: 'lg',
+      },
     });
+    if (r.iframe) { r.iframe.style.width = '100%'; r.iframe.style.colorScheme = 'dark'; }
+    return r;
   },
 
   ensureSession,
