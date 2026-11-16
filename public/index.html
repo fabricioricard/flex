@@ -182,7 +182,6 @@ nav button.on svg{stroke:var(--teal)}
   <header>
     <div class="brand"><img src="/icons/icon-192.png" alt="">Flex</div>
     <div class="hdr-r">
-      <span id="sb" class="tag hide">Modo teste</span>
       <span id="who" class="who hide"></span>
       <button id="out" class="link hide" type="button">Sair</button>
     </div>
@@ -257,7 +256,7 @@ nav button.on svg{stroke:var(--teal)}
     </div>
 
     <div id="w-login" class="card hide">
-      <span class="tag-test">Base · dinheiro de verdade</span>
+      <span class="tag-test">Rede Base</span>
       <h2 style="margin-top:10px">Crie sua carteira</h2>
       <div class="lbl" style="margin-bottom:14px">Uma carteira só sua, que você pode levar para qualquer lugar. Enviamos um código por e-mail para ativar.</div>
       <div class="field">
@@ -275,7 +274,7 @@ nav button.on svg{stroke:var(--teal)}
 
     <div id="w-main" class="hide">
       <div class="card">
-        <span class="tag-test">Rede Base · dinheiro de verdade</span>
+        <span class="tag-test">Rede Base</span>
         <h2 style="margin-top:10px">Sua carteira</h2>
         <div class="addr"><code id="wAddr"></code><button class="mini" id="wCopy" type="button">Copiar</button></div>
         <div class="tiles">
@@ -354,17 +353,28 @@ nav button.on svg{stroke:var(--teal)}
   <!-- DEPOSITAR -->
   <section id="v-depositar" class="view">
     <div class="card">
-      <h2>Depositar USDC</h2>
-      <div class="net">Rede <span id="dNet">Base</span></div>
-      <code id="dAddr"></code>
-      <button class="btn sec" id="dCopy" type="button">Copiar endereço</button>
-      <div class="note">Envie só USDC nessa rede. O saldo começa a render quando o depósito é confirmado.</div>
-    </div>
-    <div class="card hide" id="sim">
-      <h2>Modo teste</h2>
-      <label class="lbl" for="sAmt">Simular depósito (USDC)</label>
-      <input id="sAmt" inputmode="decimal" value="100" style="margin-bottom:14px">
-      <button class="btn" id="sBtn" type="button">Simular depósito</button>
+      <h2>Depositar</h2>
+      <div class="net">Rede <span>Base</span></div>
+      <div id="d-load" class="lbl" role="status"><span class="spin" aria-hidden="true"></span>Carregando o endereço da sua carteira…</div>
+      <div id="d-ready" class="hide">
+        <div class="lbl">Envie <b>USDC</b> ou <b>ETH</b> na rede Base para o endereço da sua carteira:</div>
+        <code id="dAddr"></code>
+        <button class="btn sec" id="dCopy" type="button">Copiar endereço</button>
+        <div class="warn">Envie só pela rede Base. Enviar de outra rede pode perder o dinheiro. Comece com um valor pequeno.</div>
+        <div class="links">
+          <a href="#" id="dExplorer" target="_blank" rel="noopener">Ver no explorador</a>
+          <button class="link" data-go="carteira" type="button" style="padding:0;min-height:0">Ver saldos na carteira</button>
+        </div>
+      </div>
+      <div id="d-none" class="hide">
+        <div class="lbl" style="margin-bottom:14px">Ative sua carteira para ver o endereço de depósito. Leva um minuto.</div>
+        <button class="btn" data-go="carteira" type="button">Ativar carteira</button>
+      </div>
+      <div id="d-off" class="hide"><div class="lbl">A carteira ainda não está configurada.</div></div>
+      <div id="d-err" class="hide">
+        <div class="msg err" id="dErr"></div>
+        <button class="btn sec" id="dRetry" type="button" style="margin-top:14px">Tentar de novo</button>
+      </div>
     </div>
   </section>
 
@@ -412,6 +422,7 @@ function go(tab){
   try{history.replaceState(null,'',tab==='home'?'/':'/?tab='+tab)}catch(e){}
   window.scrollTo(0,0);
   if(tab==='carteira') initWallet();
+  if(tab==='depositar') loadDeposit();
 }
 document.addEventListener('click',e=>{const t=e.target.closest('[data-go]'); if(t) go(t.dataset.go)});
 
@@ -461,8 +472,6 @@ async function load(){
   firstLoad=false;
   $('apy').textContent=nf(S.apy*100,2)+'%';
   const pd=S.balance*(Math.pow(1+S.apy,1/365)-1); $('perday').textContent='+'+nf(pd,pd>=100?2:4);
-  $('dAddr').textContent=S.deposit.address; $('dNet').textContent=S.deposit.network;
-  if(S.sandbox){$('sb').classList.remove('hide');$('sim').classList.remove('hide')}
   renderHist();
   try{const q=await api('/api/quote?usdc=1');lastRate=q.rate}catch(e){}
 }
@@ -527,11 +536,18 @@ $('dCopy').onclick=async()=>{
   catch(e){$('dCopy').textContent='Selecione e copie o endereço'}
   setTimeout(()=>$('dCopy').textContent='Copiar endereço',2000);
 };
-$('sBtn').onclick=async()=>{
-  try{await api('/api/deposit',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({usdc:parseFloat($('sAmt').value.replace(',','.'))})});await load();go('home')}
-  catch(e){alert(e.message)}
-};
+const dShow=id=>['d-load','d-ready','d-none','d-off','d-err'].forEach(x=>$(x).classList.toggle('hide',x!==id));
+async function loadDeposit(){
+  dShow('d-load');
+  try{
+    const r=await wEnsure();
+    if(r.off){ dShow('d-off'); return }
+    const a=await W.address();
+    if(!a){ dShow('d-none'); return }
+    $('dAddr').textContent=a; $('dExplorer').href=W.chain.explorer+'/address/'+a; dShow('d-ready');
+  }catch(e){ $('dErr').textContent='Não foi possível carregar a carteira: '+wErr(e); dShow('d-err') }
+}
+$('dRetry').onclick=loadDeposit;
 
 /* ---------- carteira (Base Mainnet) ---------- */
 let W=null, wAddr=null, wBal=null, wBusy=false, wStarted=false;
@@ -539,17 +555,26 @@ const wShow=id=>['w-load','w-off','w-login','w-main'].forEach(x=>$(x).classList.
 const wMsg=(el,text,ok)=>{el.className='msg '+(ok?'ok':'err');el.textContent=text};
 function wLoad(el,text){el.className='msg load';el.textContent='';const i=document.createElement('span');i.className='spin';i.setAttribute('aria-hidden','true');el.append(i,text)}
 const short=a=>a.slice(0,6)+'…'+a.slice(-4);
-function wErr(e){const m=(e&&e.message)||'';return m&&m.length<140?m:'Algo deu errado. Tente de novo.'}
+function wErr(e){const m=(e&&e.message)||'';if(/dynamically imported|Failed to fetch|NetworkError|Load failed/i.test(m))return 'Sem conexão ou bloqueio do navegador. Verifique a internet e tente de novo.';return m&&m.length<140?m:'Algo deu errado. Tente de novo.'}
 
+let wReady=null;
+async function wEnsure(){
+  if(!wReady) wReady=(async()=>{
+    const cfg=(await import('/wallet-config.js')).walletConfig;
+    if(!cfg||!cfg.cdpProjectId||String(cfg.cdpProjectId).startsWith('COLE')) return {off:true};
+    const mod=(await import('/wallet.js')).default;
+    await mod.init(cfg.cdpProjectId);
+    W=mod; return {off:false};
+  })().catch(e=>{wReady=null;throw e});
+  return wReady;
+}
 async function initWallet(){
-  if(wStarted) { if(W && wAddr) refreshWallet(); return }
+  if(wStarted){ if(W && wAddr) refreshWallet(); return }
   wStarted=true; wShow('w-load');
   try{
-    const cfg=(await import('/wallet-config.js')).walletConfig;
-    if(!cfg||!cfg.cdpProjectId||String(cfg.cdpProjectId).startsWith('COLE')){ wShow('w-off'); wStarted=false; return }
-    W=(await import('/wallet.js')).default;
-    const signed=await W.init(cfg.cdpProjectId);
-    if(signed){ await openWallet() } else { $('wEmail').value=$('wEmail').value||window.flexEmail||''; wShow('w-login') }
+    const r=await wEnsure();
+    if(r.off){ wShow('w-off'); wStarted=false; return }
+    if(await W.isSignedIn()){ await openWallet() } else { $('wEmail').value=$('wEmail').value||window.flexEmail||''; wShow('w-login') }
   }catch(e){
     wStarted=false; wShow('w-login');
     wMsg($('wLoginMsg'),'Não foi possível carregar a carteira: '+wErr(e),false);
@@ -631,7 +656,7 @@ $('wExport').onclick=async()=>{
 };
 $('wOut').onclick=async()=>{
   try{ if(W) await W.signOut() }catch(e){}
-  wAddr=null; wBal=null; $('w-code').classList.add('hide'); wShow('w-login');
+  wAddr=null; wBal=null; wStarted=false; $('w-code').classList.add('hide'); wShow('w-login');
 };
 
 /* ---------- brilho do cartão (segue o dedo) ---------- */
