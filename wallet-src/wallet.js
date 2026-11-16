@@ -2,7 +2,7 @@
 // Empacotado por build.mjs em ../public/wallet.js e carregado só quando a pessoa abre a aba Carteira.
 import {
   initialize, signInWithEmail, verifyEmailOTP, getCurrentUser, isSignedIn,
-  sendEvmTransaction, signOut, createEvmKeyExportIframe,
+  sendEvmTransaction, signOut, createEvmKeyExportIframe, getAccessToken,
 } from '@coinbase/cdp-core';
 import {
   createPublicClient, http, encodeFunctionData, parseUnits, formatUnits, formatEther, isAddress,
@@ -22,6 +22,18 @@ let flowId = null;
 async function address() {
   const u = await getCurrentUser();
   return u?.evmAccountObjects?.[0]?.address || null;
+}
+
+/** Renova a sessão da Coinbase. Se falhar, a sessão expirou e é preciso entrar de novo. */
+async function ensureSession() {
+  let t = null;
+  try { t = await getAccessToken({ forceRefresh: true }); } catch { t = null; }
+  if (!t) {
+    try { await signOut(); } catch {}
+    const e = new Error('Sua sessão da carteira expirou. Entre de novo com o código do e-mail.');
+    e.code = 'SESSION_EXPIRED';
+    throw e;
+  }
 }
 
 const api = {
@@ -75,6 +87,7 @@ const api = {
 
   /** Envia USDC (ERC-20) da carteira da pessoa. Ela paga a taxa em ETH de teste. */
   async sendUsdc(to, amount) {
+    await ensureSession();
     const from = await address();
     if (!from) throw new Error('Carteira não encontrada. Entre de novo.');
     const value = parseUnits(String(amount).replace(',', '.'), 6);
@@ -100,6 +113,7 @@ const api = {
 
   /** Mostra o botão seguro da Coinbase que copia a chave privada para a área de transferência. */
   async exportKey(target, onStatus) {
+    await ensureSession();
     const addr = await address();
     if (!addr) throw new Error('Carteira não encontrada.');
     return createEvmKeyExportIframe({
@@ -107,6 +121,7 @@ const api = {
     });
   },
 
+  ensureSession,
   signOut,
 };
 

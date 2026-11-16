@@ -597,20 +597,30 @@ $('wSendUsdc').onclick=async()=>{
     m.className='msg ok'; m.textContent='Enviado. ';
     const a=document.createElement('a'); a.href=W.chain.explorer+'/tx/'+hash; a.target='_blank'; a.rel='noopener'; a.textContent='Ver no explorador';
     m.appendChild(a); $('wValue').value=''; setTimeout(refreshWallet,4000);
-  }catch(e){ wMsg(m,wErr(e),false) }
+  }catch(e){ if(e&&e.code==='SESSION_EXPIRED') await sessionExpired(); else wMsg(m,wErr(e),false) }
   wBusy=false; $('wSendUsdc').disabled=false; $('wSendUsdc').textContent='Enviar';
 };
-let exportCleanup=null;
+let exportCleanup=null, exportBusy=false;
+function resetExport(){ if(exportCleanup){try{exportCleanup()}catch(e){}} exportCleanup=null; $('w-export').textContent=''; $('wExport').textContent='Exportar chave privada'; }
+async function sessionExpired(){ wAddr=null; wBal=null; resetExport(); wShow('w-login'); wMsg($('wLoginMsg'),'Sua sessão da carteira expirou. Entre de novo com o código do e-mail.',false); }
 $('wExport').onclick=async()=>{
+  if(exportBusy) return;
   const m=$('wExportMsg'); m.textContent='';
-  if(exportCleanup){ exportCleanup(); exportCleanup=null; $('w-export').textContent=''; $('wExport').textContent='Exportar chave privada'; return }
+  if(exportCleanup){ resetExport(); return }
+  exportBusy=true; $('wExport').disabled=true; $('wExport').textContent='Abrindo janela segura…';
   try{
     const r=await W.exportKey($('w-export'),(status,msg)=>{
-      if(status==='success') wMsg(m,'Chave copiada. Cole em outra carteira, como a MetaMask, para conferir que é a mesma conta.',true);
-      else if(status==='error') wMsg(m,msg||'Não foi possível exportar a chave.',false);
+      if(status==='ready') { $('wExport').disabled=false; $('wExport').textContent='Fechar'; wMsg(m,'Toque em “Copiar chave privada” abaixo.',true) }
+      else if(status==='success') wMsg(m,'Chave copiada. Cole em outra carteira, como a MetaMask, para conferir que é a mesma conta.',true);
+      else if(status==='error'){ resetExport(); $('wExport').disabled=false; wMsg(m,msg||'Não foi possível exportar a chave.',false) }
     });
-    exportCleanup=r.cleanup; $('wExport').textContent='Fechar';
-  }catch(e){ wMsg(m,wErr(e),false) }
+    exportCleanup=r.cleanup;
+  }catch(e){
+    resetExport();
+    if(e&&e.code==='SESSION_EXPIRED') await sessionExpired(); else wMsg(m,wErr(e),false);
+  }
+  exportBusy=false; $('wExport').disabled=false;
+  if(exportCleanup && $('wExport').textContent==='Abrindo janela segura…') $('wExport').textContent='Fechar';
 };
 $('wOut').onclick=async()=>{
   try{ if(W) await W.signOut() }catch(e){}
