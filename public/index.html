@@ -155,6 +155,10 @@ nav button.on{color:var(--tx);background:var(--s3)}
 nav button.on svg{stroke:var(--teal)}
 
 /* ---------- carteira ---------- */
+.spin{display:inline-block;width:16px;height:16px;border-radius:50%;border:2px solid var(--line2);border-top-color:var(--teal);vertical-align:-3px;margin-right:10px;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation-duration:2.4s}}
+.msg.load{color:var(--mut)}
 .tag-test{display:inline-block;font-size:12px;font-weight:700;background:rgba(255,194,77,.14);color:var(--amber);padding:3px 10px;border-radius:99px}
 .addr{display:flex;align-items:center;gap:10px;background:var(--night);border:1px solid var(--line);border-radius:16px;padding:10px 10px 10px 14px;margin:12px 0}
 .addr code{flex:1;margin:0;padding:0;border:0;background:none;font-size:13px;min-width:0}
@@ -245,7 +249,7 @@ nav button.on svg{stroke:var(--teal)}
 
   <!-- CARTEIRA -->
   <section id="v-carteira" class="view">
-    <div id="w-load" class="card"><div class="lbl">Carregando sua carteira…</div></div>
+    <div id="w-load" class="card"><div class="lbl" role="status"><span class="spin" aria-hidden="true"></span>Carregando sua carteira…</div></div>
 
     <div id="w-off" class="card hide">
       <h2>Carteira ainda não configurada</h2>
@@ -534,6 +538,7 @@ $('sBtn').onclick=async()=>{
 let W=null, wAddr=null, wBal=null, wBusy=false, wStarted=false;
 const wShow=id=>['w-load','w-off','w-login','w-main'].forEach(x=>$(x).classList.toggle('hide',x!==id));
 const wMsg=(el,text,ok)=>{el.className='msg '+(ok?'ok':'err');el.textContent=text};
+function wLoad(el,text){el.className='msg load';el.textContent='';const i=document.createElement('span');i.className='spin';i.setAttribute('aria-hidden','true');el.append(i,text)}
 const short=a=>a.slice(0,6)+'…'+a.slice(-4);
 function wErr(e){const m=(e&&e.message)||'';return m&&m.length<140?m:'Algo deu errado. Tente de novo.'}
 
@@ -568,14 +573,14 @@ async function refreshWallet(){
 $('wSend').onclick=async()=>{
   const email=$('wEmail').value.trim(), m=$('wLoginMsg');
   if(!email){wMsg(m,'Digite seu e-mail.',false);return}
-  $('wSend').disabled=true; m.textContent='';
+  $('wSend').disabled=true; wLoad(m,'Enviando o código…');
   try{ await W.startEmail(email); $('w-code').classList.remove('hide'); $('wOtp').focus(); wMsg(m,'Enviamos um código para '+email+'.',true) }
   catch(e){ wMsg(m,wErr(e),false) }
   $('wSend').disabled=false;
 };
 $('wVerify').onclick=async()=>{
-  const m=$('wLoginMsg'); $('wVerify').disabled=true; m.textContent='';
-  try{ await W.verifyCode($('wOtp').value); $('wOtp').value=''; $('w-code').classList.add('hide'); await openWallet() }
+  const m=$('wLoginMsg'); $('wVerify').disabled=true; wLoad(m,'Criando sua carteira. Isso leva alguns segundos.');
+  try{ await W.verifyCode($('wOtp').value); $('wOtp').value=''; $('w-code').classList.add('hide'); m.textContent=''; m.className='msg'; await openWallet() }
   catch(e){ wMsg(m,wErr(e),false) }
   $('wVerify').disabled=false;
 };
@@ -592,6 +597,7 @@ $('wSendUsdc').onclick=async()=>{
   if(bad){wMsg(m,bad,false);return}
   if(wBal && wBal.ethWei===0n){wMsg(m,'Você precisa de um pouco de ETH de teste para pagar a taxa. Veja “Receber” acima.',false);return}
   wBusy=true; $('wSendUsdc').disabled=true; $('wSendUsdc').textContent='Enviando…';
+  wLoad(m,'Enviando. Pode levar alguns segundos.');
   try{
     const hash=await W.sendUsdc(to,v);
     m.className='msg ok'; m.textContent='Enviado. ';
@@ -608,6 +614,7 @@ $('wExport').onclick=async()=>{
   const m=$('wExportMsg'); m.textContent='';
   if(exportCleanup){ resetExport(); return }
   exportBusy=true; $('wExport').disabled=true; $('wExport').textContent='Abrindo janela segura…';
+  wLoad(m,'Abrindo a janela segura da Coinbase. Isso leva alguns segundos.');
   try{
     const r=await W.exportKey($('w-export'),(status,msg)=>{
       if(status==='ready') { $('wExport').disabled=false; $('wExport').textContent='Fechar'; wMsg(m,'Toque em “Copiar chave privada” acima.',true) }
