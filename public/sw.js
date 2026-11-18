@@ -1,5 +1,5 @@
 // Service worker: cacheia só o "casco" do app. Nunca cacheia /api (dados financeiros).
-const VERSION = 'v12';
+const VERSION = 'v13';
 const CACHE = 'usdcflex-' + VERSION;
 const SHELL = ['/', '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png'];
 

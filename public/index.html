@@ -521,7 +521,7 @@ function renderAll(){
   const has=!!P;
   const total=has?Number(P.usdc)+Number(P.vaultAssets):0;
   $('bal').innerHTML=has?balHTML(total):'—';
-  $('brlEst').textContent=has&&rate?'≈ '+brl(total*rate)+' (cotação aproximada)':'';
+  $('brlEst').textContent=has&&rate?(total>0?'≈ '+brl(total*rate)+' · ':'')+'1 USDC ≈ '+brl(rate)+' (aprox.)':'';
   $('sEarn').textContent=has?fmt(P.vaultAssets):'—';
   $('sWallet').textContent=has?fmt(P.usdc):'—';
   const apyTxt=apyV!==null?nf(apyV*100,2)+'%':'—';
