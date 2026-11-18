@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex"><title>Flex · Diagnóstico</title>
+<style>
+body{margin:0;background:#0B0A1E;color:#eee;font:15px/1.5 system-ui,sans-serif;padding:20px 16px 60px;max-width:560px;margin-inline:auto}
+h1{font-size:20px}button{min-height:44px;padding:0 20px;border-radius:12px;border:0;background:#2EE6C5;color:#0B0A1E;font-weight:700;font-size:15px}
+.r{border-top:1px solid #2a2850;padding:10px 0}.ok{color:#2EE6C5}.bad{color:#ff7a8a}.w{color:#ffd166}small{color:#9a98c0;word-break:break-all;display:block}
+</style></head><body>
+<h1>Diagnóstico do Flex</h1>
+<p>Só leituras. Nada é assinado nem enviado. Confere se os serviços reais respondem como o app espera.</p>
+<button id="go" type="button">Rodar testes</button>
+<div id="out"></div>
+<script>
+const USDC='0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', VAULT='0xbeeF010f9cb27031ad51e3333f9aF9C6B1228183', RPC='https://mainnet.base.org';
+const out=document.getElementById('out');
+function row(ok,title,detail){const d=document.createElement('div');d.className='r';const s=document.createElement('b');s.className=ok===true?'ok':ok===false?'bad':'w';s.textContent=(ok===true?'OK · ':ok===false?'FALHOU · ':'ATENÇÃO · ')+title;d.append(s);if(detail){const m=document.createElement('small');m.textContent=detail;d.append(m)}out.append(d)}
+async function rpc(method,params){const r=await fetch(RPC,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method,params})});const j=await r.json();if(j.error)throw new Error(j.error.message);return j.result}
+const call=(to,data)=>rpc('eth_call',[{to,data},'latest']);
+const str=h=>{const b=h.slice(2);if(b.length<128)return '';const len=parseInt(b.slice(64,128),16);let s='';for(let i=0;i<len;i++)s+=String.fromCharCode(parseInt(b.substr(128+i*2,2),16));return s};
+const num=h=>BigInt(h);
+async function t(title,fn){try{const r=await fn();if(r&&r.warn)row(null,title,r.warn);else row(true,title,r)}catch(e){row(false,title,e.message||String(e))}}
+document.getElementById('go').onclick=async()=>{
+  out.textContent='';
+  await t('Rede Base (chainId 8453)',async()=>{const c=parseInt(await rpc('eth_chainId',[]),16);if(c!==8453)throw new Error('chainId='+c);return 'chainId '+c});
+  await t('USDC: símbolo e casas decimais',async()=>{const s=str(await call(USDC,'0x95d89b41')),d=num(await call(USDC,'0x313ce567'));if(s!=='USDC'||d!==6n)throw new Error(s+' / '+d);return s+', '+d+' casas'});
+  await t('Cofre: nome',async()=>str(await call(VAULT,'0x06fdde03')));
+  await t('Cofre: ativo é o USDC',async()=>{const a='0x'+(await call(VAULT,'0x38d52e0f')).slice(-40);if(a.toLowerCase()!==USDC.toLowerCase())throw new Error('asset='+a);return a});
+  await t('Cofre: cotas com 18 casas',async()=>{const d=num(await call(VAULT,'0x313ce567'));if(d!==18n)return {warn:'decimals='+d+' (o app assume 18 só para exibir; confira)'};return '18 casas'});
+  await t('Cofre: total depositado',async()=>{const v=num(await call(VAULT,'0x01e1d114'));return 'US$ '+(Number(v)/1e6).toLocaleString('pt-BR',{maximumFractionDigits:0})});
+  await t('Cofre: preço da cota (1 cota → USDC)',async()=>{const v=num(await call(VAULT,'0x07a2d13a'+(10n**18n).toString(16).padStart(64,'0')));return (Number(v)/1e6).toFixed(6)+' USDC'});
+  await t('Taxa da Morpho (REST)',async()=>{let last='';for(const p of ['v0','v1']){try{const r=await fetch('https://api.morpho.org/'+p+'/vaults-v1/8453:'+VAULT+'/apy-averages?lookback=seven_days');const j=await r.json();const x=j?.data?.apy??j?.apy;if(typeof x==='number')return p+': '+(x<=1?x*100:x).toFixed(2)+'% ao ano (valor bruto '+x+')';last=p+' sem campo apy: '+JSON.stringify(j).slice(0,120)}catch(e){last=p+': '+e.message}}throw new Error(last)});
+  await t('Cotação USD→BRL (AwesomeAPI)',async()=>{const j=await (await fetch('https://economia.awesomeapi.com.br/json/last/USD-BRL')).json();const b=parseFloat(j?.USDBRL?.bid);if(!(b>1&&b<20))throw new Error(JSON.stringify(j).slice(0,120));return 'R$ '+b});
+  await t('Histórico (Blockscout)',async()=>{const j=await (await fetch('https://base.blockscout.com/api/v2/addresses/'+VAULT+'/token-transfers?type=ERC-20')).json();const it=j.items&&j.items[0];if(!it)throw new Error('sem items: '+JSON.stringify(j).slice(0,120));const tok=it.token&&(it.token.address_hash||it.token.address);const ok=tok&&it.total&&it.total.value!==undefined&&it.transaction_hash&&it.from&&it.from.hash&&it.to&&it.to.hash&&it.timestamp;if(!ok)throw new Error('formato inesperado: '+JSON.stringify(Object.keys(it)));return 'formato esperado ('+j.items.length+' itens)'});
+  row(null,'Não testado aqui','Depósito e resgate exigem assinar. Teste no app com 1 ou 2 USDC e depois resgate tudo.');
+};
+</script></body></html>
