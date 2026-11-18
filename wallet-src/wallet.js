@@ -97,6 +97,8 @@ async function confirmTx(hash) {
   return rc;
 }
 
+const PROXY_PATH = '/cdp/platform';
+
 async function getJSON(url, ms = 7000) {
   const r = await fetch(url, { headers: { accept: 'application/json' }, signal: AbortSignal.timeout(ms) });
   if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -112,9 +114,12 @@ const api = {
     morphoUrl: 'https://app.morpho.org/base/vault/' + VAULT.address,
   },
 
-  async init(id) {
+  async init(id, opts = {}) {
     projectId = id;
-    await initialize({ projectId: id, disableAnalytics: true, ethereum: { createOnLogin: 'eoa' } });
+    const cfg = { projectId: id, disableAnalytics: true, ethereum: { createOnLogin: 'eoa' } };
+    // Modo proxy: as chamadas da Coinbase passam pelo domínio do Flex (cookie de 1ª parte).
+    if (opts.proxy) cfg.basePath = location.origin + PROXY_PATH;
+    await initialize(cfg);
     return isSignedIn();
   },
   isSignedIn,

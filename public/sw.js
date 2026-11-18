@@ -1,5 +1,5 @@
 // Service worker: cacheia só o "casco" do app. Nunca cacheia /api (dados financeiros).
-const VERSION = 'v13';
+const VERSION = 'v15';
 const CACHE = 'usdcflex-' + VERSION;
 const SHELL = ['/', '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png'];
 
@@ -18,7 +18,7 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   const url = new URL(req.url);
-  if (req.method !== 'GET' || url.origin !== location.origin || url.pathname.startsWith('/api/')) return;
+  if (req.method !== 'GET' || url.origin !== location.origin || url.pathname.startsWith('/api/') || url.pathname.startsWith('/cdp/')) return;
 
   // Rede primeiro; se offline, usa o cache.
   e.respondWith(

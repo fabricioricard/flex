@@ -254,6 +254,7 @@ details.card[open]>summary::after{content:"−"}
       <button class="act p" data-go="render" type="button">Render<span>Cofre Morpho na Base</span></button>
       <button class="act" data-go="depositar" type="button">Depositar<span>USDC na rede Base</span></button>
     </div>
+    <div class="warn hide" id="h-backup" role="alert">Você já tem saldo e ainda não exportou a sua chave. <button class="link" data-go="carteira" type="button" style="padding:0;min-height:0">Fazer o backup agora</button></div>
     <div class="note hide" id="h-hint" style="margin:-2px 2px 14px">Comece em Depositar: envie USDC e um pouco de ETH, pela rede Base, para a sua carteira.</div>
     <div class="card">
       <h2>Últimas movimentações</h2>
@@ -270,6 +271,7 @@ details.card[open]>summary::after{content:"−"}
       <button class="btn" id="rNeedBtn" data-go="carteira" type="button">Ativar carteira</button>
     </div>
     <div id="r-main" class="hide">
+      <div class="warn hide" id="rEthWarn" role="alert">Sua carteira está sem ETH para pagar a taxa de rede (centavos de dólar por operação). Envie cerca de US$ 1 em ETH, pela rede Base, para o endereço da aba Depositar. Sem isso, depósito e resgate não funcionam.</div>
       <div class="card">
         <h2>Render</h2>
         <div class="net" id="rVault">Cofre Steakhouse USDC · Morpho</div>
@@ -398,7 +400,7 @@ details.card[open]>summary::after{content:"−"}
       <div class="card">
         <h2>Sua chave</h2>
         <div class="lbl">A chave é sua. Você pode exportá-la a qualquer momento e usar a mesma carteira em outro app.</div>
-        <div class="warn">Quem tiver a chave controla todo o saldo. Nunca envie para ninguém.</div>
+        <div class="warn">Quem tiver a chave controla todo o saldo. Nunca envie para ninguém. O Flex não guarda a sua chave e não consegue recuperá-la: se você perder o acesso ao e-mail de login, só a chave exportada salva o seu dinheiro. Guarde uma cópia offline.</div>
         <button class="btn sec" id="wExport" type="button">Exportar chave privada</button>
         <div id="w-export"></div>
         <div class="msg" id="wExportMsg" role="status"></div>
@@ -485,6 +487,8 @@ const unitsOf=s=>{const [i,d='']=String(s).split('.');return BigInt(i+d.padEnd(6
 function unitsStr(u){const s=u.toString().padStart(7,'0');const i=s.slice(0,-6),d=s.slice(-6).replace(/0+$/,'');return i+(d?','+d:'')}
 
 /* ---------- dados reais (lidos da blockchain) ---------- */
+function backedUp(){try{return localStorage.getItem('flexBackup')==='1'}catch(e){return false}}
+const MIN_ETH=50000000000000n; /* 0,00005 ETH: folga para aprovar + depositar na Base */
 let P=null, apyV=null, rate=null, act=null, actFail=false, gate='load', busyOp=false, refreshing=null;
 const GATE_TXT={
   off:'A carteira ainda não está configurada.',
@@ -532,6 +536,8 @@ function renderAll(){
   $('rwAvail').textContent=has?fmt(P.withdrawable):'—';
   $('h-hint').classList.toggle('hide',!(has&&P.usdcUnits===0n&&P.assetsUnits===0n));
   if(W){ $('rExplorer').href=W.vault.explorerUrl; $('rMorpho').href=W.vault.morphoUrl; $('histLink').href=W.chain.explorer+'/address/'+wAddr; }
+  $('h-backup').classList.toggle('hide',!(has&&total>0&&!backedUp()));
+  $('rEthWarn').classList.toggle('hide',!(has&&P.ethWei<MIN_ETH));
   drawActivity();
 }
 function refreshAll(){
@@ -605,6 +611,7 @@ $('rBtn').onclick=()=>{
   if(!P){wMsg(m,'Aguarde o carregamento dos saldos.',false);return}
   const bad=W.validateDeposit(v,P);
   if(bad){wMsg(m,bad,false);return}
+  if(P.ethWei<MIN_ETH){wMsg(m,'Falta ETH na carteira para pagar a taxa de rede. Envie cerca de US$ 1 em ETH (rede Base) pela aba Depositar.',false);return}
   if(!confirm('Depositar '+v.replace('.',',')+' USDC no cofre Steakhouse USDC (Morpho, rede Base)?\n\nA taxa de rendimento varia e não é garantida. Há risco de perda (falha de contrato, de quem gerencia o cofre ou de tomadores). Você poderá resgatar quando houver liquidez.')) return;
   runOp($('rBtn'),m,'Depositando…',async()=>{
     const h=await W.deposit(v,stepMsg(m));
@@ -617,6 +624,7 @@ $('rwBtn').onclick=()=>{
   const all=P.sharesUnits>0n && ($('rwAmt').value.trim()==='' ? false : parseAmountUI(v)===P.assetsUnits);
   const bad=W.validateWithdraw(v,all,P);
   if(bad){wMsg(m,bad,false);return}
+  if(P.ethWei<MIN_ETH){wMsg(m,'Falta ETH na carteira para pagar a taxa de rede. Envie cerca de US$ 1 em ETH (rede Base) pela aba Depositar.',false);return}
   if(!confirm('Resgatar '+(all?'todo o saldo ('+fmt(P.vaultAssets)+')':v.replace('.',','))+' USDC do cofre para a sua carteira?')) return;
   runOp($('rwBtn'),m,'Resgatando…',async()=>{
     const h=await W.withdraw(v,all,stepMsg(m));
@@ -655,12 +663,22 @@ const short=a=>a.slice(0,6)+'…'+a.slice(-4);
 function wErr(e){const m=(e&&e.message)||'';if(/dynamically imported|Failed to fetch|NetworkError|Load failed/i.test(m))return 'Sem conexão ou bloqueio do navegador. Verifique a internet e tente de novo.';return m&&m.length<140?m:'Algo deu errado. Tente de novo.'}
 
 let wReady=null;
+/* Modo proxy (login em navegadores com anti-rastreamento): ative com /?proxy=1, desative com /?proxy=0, ou walletConfig.useProxy. */
+function useProxy(cfg){
+  try{
+    const q=new URLSearchParams(location.search).get('proxy');
+    if(q==='1'||q==='0') localStorage.setItem('flexProxy',q);
+    const s=localStorage.getItem('flexProxy');
+    if(s) return s==='1';
+  }catch(e){}
+  return !!(cfg&&cfg.useProxy);
+}
 async function wEnsure(){
   if(!wReady) wReady=(async()=>{
     const cfg=(await import('/wallet-config.js')).walletConfig;
     if(!cfg||!cfg.cdpProjectId||String(cfg.cdpProjectId).startsWith('COLE')) return {off:true};
     const mod=(await import('/wallet.js')).default;
-    await mod.init(cfg.cdpProjectId);
+    await mod.init(cfg.cdpProjectId,{proxy:useProxy(cfg)});
     W=mod; return {off:false};
   })().catch(e=>{wReady=null;throw e});
   return wReady;
@@ -739,7 +757,7 @@ $('wExport').onclick=async()=>{
   wLoad(m,'Abrindo a janela segura da Coinbase. Isso leva alguns segundos.');
   try{
     const r=await W.exportKey($('w-export'),(status,msg)=>{
-      if(status==='ready') { $('wExport').disabled=false; $('wExport').textContent='Fechar'; wMsg(m,'Toque em “Copiar chave privada” acima.',true) }
+      if(status==='ready') { try{localStorage.setItem('flexBackup','1')}catch(e){} $('wExport').disabled=false; $('wExport').textContent='Fechar'; wMsg(m,'Toque em “Copiar chave privada” acima.',true) }
       else if(status==='success') wMsg(m,'Chave copiada. Cole em outra carteira, como a MetaMask, para conferir que é a mesma conta.',true);
       else if(status==='error'){ resetExport(); $('wExport').disabled=false; wMsg(m,msg||'Não foi possível exportar a chave.',false) }
     });
