@@ -1,7 +1,7 @@
 {
   "name": "Flex",
   "short_name": "Flex",
-  "description": "Seu dólar digital rendendo todo dia, com saque no Pix quando você quiser.",
+  "description": "Sua carteira de dólar digital na Base, com rendimento em cofre Morpho.",
   "lang": "pt-BR",
   "start_url": "/?source=pwa",
   "scope": "/",
@@ -35,8 +35,8 @@
   ],
   "shortcuts": [
     {
-      "name": "Sacar no Pix",
-      "url": "/?tab=sacar",
+      "name": "Render",
+      "url": "/?tab=render",
       "icons": [
         {
           "src": "/icons/icon-192.png",

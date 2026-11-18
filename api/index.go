@@ -17,14 +17,10 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		route = path.Base(r.URL.Path)
 	}
 	switch route {
-	case "account":
-		app.HandleAccount(w, r)
-	case "quote":
-		app.HandleQuote(w, r)
-	case "withdraw":
-		app.HandleWithdraw(w, r)
-	case "deposit":
-		app.HandleSimDeposit(w, r)
+	case "health":
+		app.HandleHealth(w, r)
+	case "me":
+		app.HandleMe(w, r)
 	default:
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNotFound)

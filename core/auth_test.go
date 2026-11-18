@@ -13,7 +13,6 @@ import (
 	"math/big"
 	"net/http"
 	"net/http/httptest"
-	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -117,56 +116,46 @@ func TestVerify(t *testing.T) {
 	}
 }
 
-func TestHandlersIsolateUsers(t *testing.T) {
+func TestMeEndpointRequiresValidLogin(t *testing.T) {
 	idp := newTestIdP(t)
-	app := &App{
-		store:   &Store{b: NewFileBackend(filepath.Join(t.TempDir(), "s.json"))},
-		yield:   MockYield{apy: 0.05},
-		fx:      MockFX{Base: 5.4, Spread: 0.006},
-		pix:     MockPix{},
-		sandbox: true,
-		auth:    idp.verifier(),
-	}
-	call := func(h http.HandlerFunc, method, tok, body string, hdr map[string]string) *httptest.ResponseRecorder {
-		r := httptest.NewRequest(method, "/x", strings.NewReader(body))
+	app := &App{auth: idp.verifier()}
+	call := func(tok string) *httptest.ResponseRecorder {
+		r := httptest.NewRequest("GET", "/api/me", nil)
 		if tok != "" {
 			r.Header.Set("Authorization", "Bearer "+tok)
 		}
-		for k, v := range hdr {
-			r.Header.Set(k, v)
-		}
 		w := httptest.NewRecorder()
-		h(w, r)
+		app.HandleMe(w, r)
 		return w
 	}
-	ana, bia := idp.token(t, good("ana")), idp.token(t, good("bia"))
-
-	if w := call(app.HandleAccount, "GET", "", "", nil); w.Code != 401 {
+	if w := call(""); w.Code != 401 {
 		t.Fatalf("sem token: %d", w.Code)
 	}
-	if w := call(app.HandleAccount, "GET", "lixo", "", nil); w.Code != 401 {
+	if w := call("lixo"); w.Code != 401 {
 		t.Fatalf("token lixo: %d", w.Code)
 	}
-	if w := call(app.HandleSimDeposit, "POST", ana, `{"usdc":100}`, nil); w.Code != 200 {
-		t.Fatalf("depósito ana: %d %s", w.Code, w.Body)
+	for _, uid := range []string{"ana", "bia"} {
+		w := call(idp.token(t, good(uid)))
+		var out struct{ UID string }
+		_ = json.Unmarshal(w.Body.Bytes(), &out)
+		if w.Code != 200 || out.UID != uid {
+			t.Fatalf("%s: %d %s", uid, w.Code, w.Body)
+		}
 	}
-	var acc struct{ Balance float64 }
-	_ = json.Unmarshal(call(app.HandleAccount, "GET", bia, "", nil).Body.Bytes(), &acc)
-	if acc.Balance != 0 {
-		t.Fatalf("bia enxergou saldo da ana: %v", acc.Balance)
+	// sem verificador configurado: recusa em vez de liberar um usuário "demo"
+	r := httptest.NewRequest("GET", "/api/me", nil)
+	r.Header.Set("Authorization", "Bearer qualquer")
+	w := httptest.NewRecorder()
+	(&App{}).HandleMe(w, r)
+	if w.Code != 503 {
+		t.Fatalf("sem verificador: %d", w.Code)
 	}
-	// bia não consegue sacar o dinheiro da ana
-	w := call(app.HandleWithdraw, "POST", bia, `{"usdc":10,"pix_key":"a@b.com"}`, map[string]string{"Idempotency-Key": "bia-idem-1"})
-	if w.Code != 400 {
-		t.Fatalf("bia sacou sem saldo: %d %s", w.Code, w.Body)
-	}
-	w = call(app.HandleWithdraw, "POST", ana, `{"usdc":10,"pix_key":"a@b.com"}`, map[string]string{"Idempotency-Key": "ana-idem-1"})
-	if w.Code != 200 || !strings.Contains(w.Body.String(), `"completed"`) {
-		t.Fatalf("saque ana: %d %s", w.Code, w.Body)
-	}
-	// mesma Idempotency-Key em outra conta não vaza o lançamento da ana
-	w = call(app.HandleWithdraw, "POST", bia, `{"usdc":10,"pix_key":"a@b.com"}`, map[string]string{"Idempotency-Key": "ana-idem-1"})
-	if w.Code != 400 {
-		t.Fatalf("idempotência vazou entre contas: %d %s", w.Code, w.Body)
+}
+
+func TestHealth(t *testing.T) {
+	w := httptest.NewRecorder()
+	(&App{}).HandleHealth(w, httptest.NewRequest("GET", "/api/health", nil))
+	if w.Code != 200 || !strings.Contains(w.Body.String(), `"ok":true`) {
+		t.Fatalf("%d %s", w.Code, w.Body)
 	}
 }

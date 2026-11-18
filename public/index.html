@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Flex</title>
-<meta name="description" content="Seu dólar digital rendendo todo dia, com saque no Pix quando você quiser.">
+<meta name="description" content="Carteira própria em USDC na rede Base, com rendimento em cofre.">
 <meta name="theme-color" content="#0B0A1E">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
@@ -173,6 +173,16 @@ nav button.on svg{stroke:var(--teal)}
 .warn{background:rgba(255,194,77,.1);border:1px solid rgba(255,194,77,.25);border-radius:16px;padding:12px 14px;font-size:13px;color:var(--amber);margin:12px 0}
 .danger{color:var(--pink)}
 #w-export{margin-top:12px;min-height:0}
+a.tx{color:inherit;text-decoration:none}
+.soon .ic{background:var(--s2);color:var(--mut)}
+details.card>summary{cursor:pointer;font-family:var(--display);font-weight:600;font-size:18px;letter-spacing:-.03em;list-style:none;display:flex;justify-content:space-between;align-items:center}
+details.card>summary::-webkit-details-marker{display:none}
+details.card>summary::after{content:"+";color:var(--teal);font-size:22px;line-height:1}
+details.card[open]>summary::after{content:"−"}
+.risk{margin:12px 0 0;padding-left:18px;color:var(--mut);font-size:14px}
+.risk li{margin:8px 0}
+.risk b{color:var(--tx)}
+.tiles .k{display:block}
 @media (max-width:460px){.who{display:none}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -200,8 +210,8 @@ nav button.on svg{stroke:var(--teal)}
   <!-- ENTRAR -->
   <section id="v-auth" class="view">
     <div class="intro">
-      <h1>Seu dólar rende todo dia.</h1>
-      <p>Saque no Pix a qualquer hora, sem carência.</p>
+      <h1>Seu dólar, na sua carteira.</h1>
+      <p>Só você controla a chave. Faça render num cofre quando quiser.</p>
     </div>
     <div class="card">
       <div class="field">
@@ -225,24 +235,99 @@ nav button.on svg{stroke:var(--teal)}
 
   <!-- INÍCIO -->
   <section id="v-home" class="view">
+    <div class="card hide" id="h-none">
+      <h2>Ative sua carteira</h2>
+      <div class="lbl" id="hNoneTxt" style="margin-bottom:14px"></div>
+      <button class="btn" id="hNoneBtn" data-go="carteira" type="button">Ativar carteira</button>
+    </div>
     <div class="hero" id="hero">
-      <div class="lbl">Seu saldo</div>
-      <div class="bal" id="bal">0<span class="dec">,000000</span></div>
-      <div class="sub"><span class="unit">USDC</span><span id="brlEst">≈ R$ 0,00</span></div>
+      <div class="lbl">Seu saldo total</div>
+      <div class="bal" id="bal">—</div>
+      <div class="sub"><span class="unit">USDC</span><span id="brlEst"></span></div>
       <div class="stats">
-        <div><span class="k">Rendeu</span><b class="pos" id="earn">+0,000000</b></div>
+        <div><span class="k">Rendendo</span><b class="pos" id="sEarn">—</b></div>
+        <div><span class="k">Na carteira</span><b id="sWallet">—</b></div>
         <div><span class="k">Taxa ao ano</span><b id="apy">—</b></div>
-        <div><span class="k">Por dia</span><b class="pos" id="perday">—</b></div>
       </div>
     </div>
     <div class="actions">
-      <button class="act p" data-go="sacar" type="button">Sacar no Pix<span>Cai na hora</span></button>
+      <button class="act p" data-go="render" type="button">Render<span>Cofre Morpho na Base</span></button>
       <button class="act" data-go="depositar" type="button">Depositar<span>USDC na rede Base</span></button>
     </div>
+    <div class="note hide" id="h-hint" style="margin:-2px 2px 14px">Comece em Depositar: envie USDC e um pouco de ETH, pela rede Base, para a sua carteira.</div>
     <div class="card">
       <h2>Últimas movimentações</h2>
-      <div id="histMini"><div class="empty">Quando você depositar ou sacar, aparece aqui.</div></div>
-      <button class="link" data-go="extrato" type="button" style="margin-top:6px">Ver extrato completo</button>
+      <div id="hist"><div class="empty">Quando você depositar ou resgatar, aparece aqui.</div></div>
+      <div class="links"><a href="#" id="histLink" target="_blank" rel="noopener">Ver tudo no explorador</a></div>
+    </div>
+  </section>
+
+  <!-- RENDER -->
+  <section id="v-render" class="view">
+    <div class="card hide" id="r-need">
+      <h2>Ative sua carteira</h2>
+      <div class="lbl" id="rNeedTxt" style="margin-bottom:14px"></div>
+      <button class="btn" id="rNeedBtn" data-go="carteira" type="button">Ativar carteira</button>
+    </div>
+    <div id="r-main" class="hide">
+      <div class="card">
+        <h2>Render</h2>
+        <div class="net" id="rVault">Cofre Steakhouse USDC · Morpho</div>
+        <div class="tiles">
+          <div class="tile"><span class="k">Seu saldo no cofre</span><div class="v" id="rBal">—</div><small>USDC</small></div>
+          <div class="tile eth"><span class="k">Taxa ao ano</span><div class="v" id="rApy">—</div><small id="rDay">Variável</small></div>
+        </div>
+        <div class="links">
+          <a href="#" id="rExplorer" target="_blank" rel="noopener">Ver o cofre</a>
+          <a href="#" id="rMorpho" target="_blank" rel="noopener">Taxa no Morpho</a>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Depositar no cofre</h2>
+        <div class="lbl">Na carteira: <b style="color:var(--tx)" id="rAvail">0,00</b> USDC</div>
+        <div class="amt">
+          <input id="rAmt" inputmode="decimal" placeholder="0,00" autocomplete="off" aria-label="Valor em USDC para depositar">
+          <span>USDC</span>
+        </div>
+        <div class="chips">
+          <button class="chip" data-t="dep" data-rp="25" type="button">25%</button>
+          <button class="chip" data-t="dep" data-rp="50" type="button">50%</button>
+          <button class="chip" data-t="dep" data-rp="75" type="button">75%</button>
+          <button class="chip" data-t="dep" data-rp="100" type="button">Tudo</button>
+        </div>
+        <button class="btn" id="rBtn" type="button" style="margin-top:16px">Depositar no cofre</button>
+        <div class="msg" id="rMsg" role="status"></div>
+        <div class="note">Você assina cada passo na sua carteira e paga a taxa da rede em ETH, na Base.</div>
+      </div>
+
+      <div class="card">
+        <h2>Resgatar</h2>
+        <div class="lbl">Disponível agora: <b style="color:var(--tx)" id="rwAvail">0,00</b> USDC</div>
+        <div class="amt">
+          <input id="rwAmt" inputmode="decimal" placeholder="0,00" autocomplete="off" aria-label="Valor em USDC para resgatar">
+          <span>USDC</span>
+        </div>
+        <div class="chips">
+          <button class="chip" data-t="wd" data-rp="25" type="button">25%</button>
+          <button class="chip" data-t="wd" data-rp="50" type="button">50%</button>
+          <button class="chip" data-t="wd" data-rp="75" type="button">75%</button>
+          <button class="chip" data-t="wd" data-rp="100" type="button">Tudo</button>
+        </div>
+        <button class="btn sec" id="rwBtn" type="button" style="margin-top:16px">Resgatar para a carteira</button>
+        <div class="msg" id="rwMsg" role="status"></div>
+      </div>
+
+      <details class="card">
+        <summary>Como funciona e riscos</summary>
+        <ul class="risk">
+          <li>Seu USDC é emprestado a mercados da <b>Morpho</b>, escolhidos pela <b>Steakhouse</b>, que gerencia o cofre. O que rende é o juro pago por quem toma emprestado.</li>
+          <li>A taxa <b>varia todo dia</b> e não é garantida. Não é poupança nem renda fixa.</li>
+          <li><b>Riscos:</b> falha no contrato, erro de quem gerencia o cofre, calote de tomadores e falta de liquidez. Se muita gente resgatar ao mesmo tempo, pode ser preciso esperar.</li>
+          <li>Ninguém garante o seu dinheiro, nem o Flex nem a Coinbase. O Flex não guarda nem move nada: cada operação é assinada por você.</li>
+          <li>Comece com um valor pequeno e teste um resgate antes de depositar mais.</li>
+        </ul>
+      </details>
     </div>
   </section>
 
@@ -323,33 +408,6 @@ nav button.on svg{stroke:var(--teal)}
     </div>
   </section>
 
-  <!-- SACAR -->
-  <section id="v-sacar" class="view">
-    <div class="card">
-      <h2>Sacar no Pix</h2>
-      <div class="lbl">Disponível: <b id="avail" style="color:var(--tx)">0,000000</b> USDC</div>
-      <div class="amt">
-        <input id="wAmt" inputmode="decimal" placeholder="0,00" autocomplete="off" aria-label="Valor em USDC">
-        <span>USDC</span>
-      </div>
-      <div class="chips">
-        <button class="chip" data-pct="25" type="button">25%</button>
-        <button class="chip" data-pct="50" type="button">50%</button>
-        <button class="chip" data-pct="75" type="button">75%</button>
-        <button class="chip" id="wAll" data-pct="100" type="button">Tudo</button>
-      </div>
-      <div class="recv" id="wQuote"><div><span class="k">Você recebe</span><strong>R$ 0,00</strong></div></div>
-    </div>
-    <div class="card">
-      <label class="lbl" for="wKey">Chave Pix</label>
-      <input id="wKey" placeholder="CPF, e-mail, telefone…" autocomplete="off" autocapitalize="none" spellcheck="false">
-      <div class="help">Aceita CPF, CNPJ, e-mail, telefone (+55…) ou chave aleatória.</div>
-      <button class="btn" id="wBtn" type="button" style="margin-top:16px">Sacar agora</button>
-      <div class="msg" id="wMsg" role="status"></div>
-      <div class="note">O Pix sai na hora. Se der erro, o valor volta para o seu saldo.</div>
-    </div>
-  </section>
-
   <!-- DEPOSITAR -->
   <section id="v-depositar" class="view">
     <div class="card">
@@ -378,41 +436,36 @@ nav button.on svg{stroke:var(--teal)}
     </div>
   </section>
 
-  <!-- EXTRATO -->
-  <section id="v-extrato" class="view">
+  <!-- PIX -->
+  <section id="v-pix" class="view">
+    <div class="card soon">
+      <h2>Pix</h2>
+      <div class="lbl" style="margin-bottom:8px">Ainda não está disponível. Quando estiver, aparece aqui.</div>
+      <div class="tx"><div class="ic"><svg viewBox="0 0 24 24"><path d="M17 7L7 17M15 17H7V9"/></svg></div><div class="m"><b>Depositar por Pix</b><span>Reais viram USDC direto na sua carteira.</span></div></div>
+      <div class="tx"><div class="ic"><svg viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></svg></div><div class="m"><b>Sacar para o Pix</b><span>USDC vira reais na sua chave Pix.</span></div></div>
+    </div>
     <div class="card">
-      <h2>Extrato</h2>
-      <div id="hist"><div class="empty">Nenhuma movimentação ainda.</div></div>
+      <h2>Enquanto isso</h2>
+      <div class="lbl">Resgate do cofre para a carteira em Render. Da carteira, você envia o USDC para onde quiser.</div>
+      <div class="links"><button class="link" data-go="render" type="button" style="padding:0;min-height:0">Ir para Render</button><button class="link" data-go="carteira" type="button" style="padding:0;min-height:0">Ir para Carteira</button></div>
     </div>
   </section>
 </div>
 
 <nav id="nav" class="hide" aria-label="Principal">
   <button data-go="home" class="on" type="button"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Início</button>
-  <button data-go="carteira" type="button"><svg viewBox="0 0 24 24"><path d="M4 7h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM4 7V6a2 2 0 0 1 2-2h11M16 14h.01"/></svg>Carteira</button>
-  <button data-go="sacar" type="button"><svg viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></svg>Sacar</button>
+  <button data-go="render" type="button"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg>Render</button>
   <button data-go="depositar" type="button"><svg viewBox="0 0 24 24"><path d="M17 7L7 17M15 17H7V9"/></svg>Depositar</button>
-  <button data-go="extrato" type="button"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6"/></svg>Extrato</button>
+  <button data-go="carteira" type="button"><svg viewBox="0 0 24 24"><path d="M4 7h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM4 7V6a2 2 0 0 1 2-2h11M16 14h.01"/></svg>Carteira</button>
+  <button data-go="pix" type="button"><svg viewBox="0 0 24 24"><path d="M12 3l9 9-9 9-9-9z"/></svg>Pix</button>
 </nav>
 
 <script>
 const $=id=>document.getElementById(id);
 const nf=(n,d)=>n.toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d});
+const fmt=n=>Number(n).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:6});
 const brl=n=>n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
-let S=null,t0=0,lastRate=null,introAt=0,fitLen=0;
-
-async function api(path,opt){
-  opt=opt||{};
-  if(window.getToken){
-    const t=await window.getToken();
-    if(t) opt.headers=Object.assign({},opt.headers,{Authorization:'Bearer '+t});
-  }
-  const r=await fetch(path,opt); const j=await r.json().catch(()=>({}));
-  if(r.status===401 && window.signOutNow){ window.signOutNow(); }
-  if(!r.ok) throw new Error(j.error||'erro'); return j;
-}
 
 /* ---------- navegação ---------- */
 function go(tab){
@@ -423,112 +476,156 @@ function go(tab){
   window.scrollTo(0,0);
   if(tab==='carteira') initWallet();
   if(tab==='depositar') loadDeposit();
+  if((tab==='home'||tab==='render') && signedIn) refreshAll();
 }
 document.addEventListener('click',e=>{const t=e.target.closest('[data-go]'); if(t) go(t.dataset.go)});
 
-/* ---------- saldo ---------- */
+/* ---------- unidades (6 casas) ---------- */
+const unitsOf=s=>{const [i,d='']=String(s).split('.');return BigInt(i+d.padEnd(6,'0').slice(0,6))};
+function unitsStr(u){const s=u.toString().padStart(7,'0');const i=s.slice(0,-6),d=s.slice(-6).replace(/0+$/,'');return i+(d?','+d:'')}
+
+/* ---------- dados reais (lidos da blockchain) ---------- */
+let P=null, apyV=null, rate=null, act=null, actFail=false, gate='load', busyOp=false, refreshing=null;
+const GATE_TXT={
+  off:'A carteira ainda não está configurada.',
+  login:'Para ver seu saldo e começar a render, ative sua carteira. Leva um minuto.',
+  err:'Não foi possível carregar a carteira agora. Verifique a conexão e tente de novo.'
+};
 function balHTML(v){
   const [i,d]=v.toFixed(6).split('.');
   return nf(Number(i),0)+'<span class="dec"><b>,</b>'+d.split('').map(c=>'<i>'+c+'</i>').join('')+'</span>';
 }
-function current(){
-  if(!S) return 0;
-  return S.balance*Math.exp(Math.log1p(S.apy)*((Date.now()-t0)/1000)/31536000);
+async function ensureAddr(){
+  const r=await wEnsure();
+  if(r.off) return 'off';
+  if(!(await W.isSignedIn())) return 'login';
+  wAddr=wAddr||await W.address();
+  return wAddr?'ok':'login';
 }
-function tick(){
-  if(S){
-    const real=current();
-    let shown=real;
-    if(introAt){
-      const k=Math.min(1,(performance.now()-introAt)/1000);
-      shown=real*(1-Math.pow(1-k,3));
-      if(k>=1) introAt=0;
-    }
-    const bal=$('bal'); bal.innerHTML=balHTML(shown);
-    const len=String(Math.floor(real)).length;
-    if(len!==fitLen){
-      fitLen=len; bal.style.fontSize='';
-      if(bal.scrollWidth>bal.clientWidth){
-        bal.style.fontSize=(parseFloat(getComputedStyle(bal).fontSize)*bal.clientWidth/bal.scrollWidth*0.97)+'px';
-      }
-    }
-    $('avail').textContent=nf(real,6);
-    $('earn').textContent='+'+nf(Math.max(0,real-S.principal),6);
-    $('brlEst').textContent=lastRate?'≈ '+brl(real*lastRate):'';
-  }
-  setTimeout(()=>requestAnimationFrame(tick),100);
+function renderGate(){
+  const ok=gate==='ok', txt=GATE_TXT[gate]||'';
+  $('h-none').classList.toggle('hide',ok||gate==='load');
+  $('hero').classList.toggle('hide',!ok&&gate!=='load');
+  $('r-need').classList.toggle('hide',ok||gate==='load');
+  $('r-main').classList.toggle('hide',!ok);
+  $('hNoneTxt').textContent=txt; $('rNeedTxt').textContent=txt;
+  const retry=gate==='err';
+  $('hNoneBtn').textContent=$('rNeedBtn').textContent=retry?'Tentar de novo':'Ativar carteira';
+  $('hNoneBtn').dataset.go=$('rNeedBtn').dataset.go=retry?'':'carteira';
+  if(gate==='off'){$('hNoneBtn').classList.add('hide');$('rNeedBtn').classList.add('hide')}
+  else{$('hNoneBtn').classList.remove('hide');$('rNeedBtn').classList.remove('hide')}
 }
+function renderAll(){
+  renderGate();
+  if(gate!=='ok') return;
+  const has=!!P;
+  const total=has?Number(P.usdc)+Number(P.vaultAssets):0;
+  $('bal').innerHTML=has?balHTML(total):'—';
+  $('brlEst').textContent=has&&rate?'≈ '+brl(total*rate)+' (cotação aproximada)':'';
+  $('sEarn').textContent=has?fmt(P.vaultAssets):'—';
+  $('sWallet').textContent=has?fmt(P.usdc):'—';
+  const apyTxt=apyV!==null?nf(apyV*100,2)+'%':'—';
+  $('apy').textContent=apyTxt; $('rApy').textContent=apyTxt;
+  $('rDay').textContent=apyV!==null?'Média de 7 dias · variável':'Variável, não garantida';
+  $('rBal').textContent=has?fmt(P.vaultAssets):'—';
+  $('rAvail').textContent=has?fmt(P.usdc):'—';
+  $('rwAvail').textContent=has?fmt(P.withdrawable):'—';
+  $('h-hint').classList.toggle('hide',!(has&&P.usdcUnits===0n&&P.assetsUnits===0n));
+  if(W){ $('rExplorer').href=W.vault.explorerUrl; $('rMorpho').href=W.vault.morphoUrl; $('histLink').href=W.chain.explorer+'/address/'+wAddr; }
+  drawActivity();
+}
+function refreshAll(){
+  if(refreshing) return refreshing;
+  refreshing=(async()=>{
+    try{ gate=await ensureAddr() }catch(e){ gate='err' }
+    if(gate!=='ok'){ P=null; renderAll(); return }
+    try{ P=await W.portfolio(wAddr) }catch(e){ P=null }
+    renderAll();
+    W.apy().then(x=>{apyV=x;renderAll()}).catch(()=>{});
+    W.usdBrl().then(x=>{rate=x;renderAll()}).catch(()=>{});
+    loadActivity();
+  })().finally(()=>{refreshing=null});
+  return refreshing;
+}
+$('hNoneBtn').addEventListener('click',()=>{ if(gate==='err') refreshAll() });
+$('rNeedBtn').addEventListener('click',()=>{ if(gate==='err') refreshAll() });
 
-/* ---------- dados ---------- */
-let firstLoad=true;
-async function load(){
-  try{
-    S=await api('/api/account'); t0=Date.now(); $('off').classList.add('hide');
-  }catch(e){
-    $('off').textContent=(e instanceof TypeError)?'Sem conexão. O saldo pode estar desatualizado.':e.message;
-    $('off').classList.remove('hide'); return
-  }
-  if(firstLoad && !reduceMotion && S.balance>0){ introAt=performance.now(); }
-  firstLoad=false;
-  $('apy').textContent=nf(S.apy*100,2)+'%';
-  const pd=S.balance*(Math.pow(1+S.apy,1/365)-1); $('perday').textContent='+'+nf(pd,pd>=100?2:4);
-  renderHist();
-  try{const q=await api('/api/quote?usdc=1');lastRate=q.rate}catch(e){}
-}
+/* ---------- movimentações ---------- */
 const I_IN='<svg viewBox="0 0 24 24"><path d="M17 7L7 17M15 17H7V9"/></svg>';
 const I_OUT='<svg viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></svg>';
-function txHTML(e){
-  const dt=new Date(e.at).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
-  if(e.type==='deposit') return `<div class="tx"><div class="ic in">${I_IN}</div><div class="m"><b>Depósito</b><span>${dt}</span></div><div class="r"><b class="pos">+${nf(e.usdc,2)} USDC</b></div></div>`;
-  const st={completed:['Concluído','st-ok'],pending:['Processando','st-wait'],failed:['Falhou, valor devolvido','st-bad']}[e.status]||[e.status,''];
-  return `<div class="tx"><div class="ic out">${I_OUT}</div><div class="m"><b>Pix para ${esc(e.pix_key)}</b><span>${dt} · <span class="${st[1]}">${st[0]}</span></span></div><div class="r"><b>−${nf(e.usdc,2)} USDC</b><span>${brl(e.brl)}</span></div></div>`;
+const KIND={
+  'in':['Recebido','in',1],'out':['Enviado','out',-1],
+  'vault-in':['Depositado no cofre','out',-1],'vault-out':['Resgatado do cofre','in',1]
+};
+async function loadActivity(){
+  try{ act=await W.activity(wAddr); actFail=false }catch(e){ actFail=true }
+  drawActivity();
 }
-function renderHist(){
-  if(!S.entries.length) return;
-  $('hist').innerHTML=S.entries.map(txHTML).join('');
-  $('histMini').innerHTML=S.entries.slice(0,3).map(txHTML).join('');
+function drawActivity(){
+  const el=$('hist');
+  if(gate!=='ok'){ el.innerHTML=''; return }
+  if(actFail&&!act){ el.innerHTML='<div class="empty">Não foi possível carregar o histórico agora. Veja no explorador abaixo.</div>'; return }
+  if(!act){ el.innerHTML='<div class="empty">Carregando…</div>'; return }
+  if(!act.length){ el.innerHTML='<div class="empty">Quando você depositar ou resgatar, aparece aqui.</div>'; return }
+  el.innerHTML=act.slice(0,8).map(e=>{
+    const k=KIND[e.kind]||['Movimentação','in',1];
+    const d=e.ts?new Date(e.ts).toLocaleDateString('pt-BR',{day:'2-digit',month:'short'}):'';
+    const who=e.other?' · '+esc(e.other.slice(0,6)+'…'+e.other.slice(-4)):'';
+    return '<div class="tx"><div class="ic '+k[1]+'">'+(k[2]>0?I_IN:I_OUT)+'</div><div class="m"><b>'+k[0]+'</b><span>'+d+who+'</span></div><div class="r"><b>'+(k[2]>0?'+':'−')+fmt(e.amount)+'</b><span>USDC</span></div></div>';
+  }).join('');
 }
 
-/* ---------- saque ---------- */
-let qt,all=false;
-function showQuote(q){
-  $('wQuote').innerHTML=q
-    ? `<div><span class="k">Você recebe</span><strong>${brl(q.brl)}</strong></div><small>1 USDC = ${brl(q.rate)}</small>`
-    : '<div><span class="k">Você recebe</span><strong>R$ 0,00</strong></div>';
+/* ---------- render: depositar / resgatar ---------- */
+document.querySelectorAll('.chip[data-t]').forEach(c=>c.onclick=()=>{
+  if(!P) return;
+  const pct=BigInt(c.dataset.rp), dep=c.dataset.t==='dep';
+  const base=dep?P.usdcUnits:unitsOf(P.withdrawable);
+  $(dep?'rAmt':'rwAmt').value=unitsStr(pct===100n?base:base*pct/100n);
+});
+function setBusy(b){ busyOp=b; ['rBtn','rwBtn'].forEach(id=>$(id).disabled=b) }
+const STEP={approve:'Passo 1: autorize o USDC na sua carteira…',wait:'Aguardando a confirmação da rede…',deposit:'Assinando o depósito…',withdraw:'Assinando o resgate…'};
+function stepMsg(m){return s=>{ let t=STEP[s.step]||'Processando…'; if(s.total>1&&s.step==='deposit') t='Passo '+s.n+' de '+s.total+': '+t; wLoad(m,t) }}
+function doneMsg(m,text,hash){
+  m.className='msg ok'; m.textContent=text+' ';
+  if(hash){const a=document.createElement('a');a.href=W.chain.explorer+'/tx/'+hash;a.target='_blank';a.rel='noopener';a.textContent='Ver no explorador';m.appendChild(a)}
 }
-function updateQuote(){
-  clearTimeout(qt);
-  qt=setTimeout(async()=>{
-    const v=parseFloat($('wAmt').value.replace(',','.'));
-    if(!(v>0)){showQuote(null);return}
-    try{showQuote(await api('/api/quote?usdc='+v))}catch(e){showQuote(null)}
-  },250);
+async function runOp(btn,m,label,fn){
+  if(busyOp||!P) return;
+  setBusy(true); const old=btn.textContent; btn.textContent=label;
+  try{ await fn() }
+  catch(e){
+    if(e&&e.code==='SESSION_EXPIRED'){ wMsg(m,'Sua sessão da carteira expirou. Vá em Carteira e entre de novo com o código do e-mail.',false); gate='login'; wAddr=null; renderAll() }
+    else if(e&&e.code==='PENDING'){ doneMsg(m,'Enviado, mas a rede ainda não confirmou. Confira o andamento:',e.hash); setTimeout(refreshAll,8000) }
+    else wMsg(m,wErr(e),false);
+  }
+  btn.textContent=old; setBusy(false);
 }
-$('wAmt').addEventListener('input',()=>{all=false;updateQuote()});
-document.querySelectorAll('[data-pct]').forEach(b=>b.addEventListener('click',()=>{
-  const pct=+b.dataset.pct, cur=current();
-  if(pct===100){ all=true; $('wAmt').value=cur.toFixed(6).replace('.',','); }
-  else { all=false; $('wAmt').value=(Math.floor(cur*pct)/100).toFixed(2).replace('.',','); }
-  updateQuote();
-}));
-$('wBtn').onclick=async()=>{
-  const msg=$('wMsg'); msg.className='msg'; msg.textContent='';
-  const usdc=parseFloat($('wAmt').value.replace(',','.'));
-  if(!all && !(usdc>0)){msg.className='msg err';msg.textContent='Digite quanto você quer sacar.';return}
-  $('wBtn').disabled=true; $('wBtn').textContent='Enviando Pix…';
-  try{
-    const e=await api('/api/withdraw',{method:'POST',
-      headers:{'Content-Type':'application/json','Idempotency-Key':crypto.randomUUID()},
-      body:JSON.stringify({usdc:all?0:usdc,all,pix_key:$('wKey').value})});
-    if(e.status==='completed'){
-      msg.className='msg ok'; msg.textContent=`Pix de ${brl(e.brl)} enviado. ID ${e.e2e_id}`;
-      if(navigator.vibrate) navigator.vibrate(60);
-      $('wAmt').value=''; showQuote(null); all=false;
-    } else { msg.className='msg err'; msg.textContent=e.error||'O Pix não saiu. Tente de novo.' }
-    await load();
-  }catch(er){msg.className='msg err';msg.textContent=er.message}
-  $('wBtn').disabled=false; $('wBtn').textContent='Sacar agora';
+$('rBtn').onclick=()=>{
+  const m=$('rMsg'), v=$('rAmt').value; m.textContent=''; m.className='msg';
+  if(!P){wMsg(m,'Aguarde o carregamento dos saldos.',false);return}
+  const bad=W.validateDeposit(v,P);
+  if(bad){wMsg(m,bad,false);return}
+  if(!confirm('Depositar '+v.replace('.',',')+' USDC no cofre Steakhouse USDC (Morpho, rede Base)?\n\nA taxa de rendimento varia e não é garantida. Há risco de perda (falha de contrato, de quem gerencia o cofre ou de tomadores). Você poderá resgatar quando houver liquidez.')) return;
+  runOp($('rBtn'),m,'Depositando…',async()=>{
+    const h=await W.deposit(v,stepMsg(m));
+    $('rAmt').value=''; doneMsg(m,'Depósito confirmado.',h); await refreshAll();
+  });
 };
+$('rwBtn').onclick=()=>{
+  const m=$('rwMsg'), v=$('rwAmt').value; m.textContent=''; m.className='msg';
+  if(!P){wMsg(m,'Aguarde o carregamento dos saldos.',false);return}
+  const all=P.sharesUnits>0n && ($('rwAmt').value.trim()==='' ? false : parseAmountUI(v)===P.assetsUnits);
+  const bad=W.validateWithdraw(v,all,P);
+  if(bad){wMsg(m,bad,false);return}
+  if(!confirm('Resgatar '+(all?'todo o saldo ('+fmt(P.vaultAssets)+')':v.replace('.',','))+' USDC do cofre para a sua carteira?')) return;
+  runOp($('rwBtn'),m,'Resgatando…',async()=>{
+    const h=await W.withdraw(v,all,stepMsg(m));
+    $('rwAmt').value=''; doneMsg(m,'Resgate confirmado. O USDC voltou para a sua carteira.',h); await refreshAll();
+  });
+};
+function parseAmountUI(s){
+  let t=String(s||'').trim().replace(',','.'); if(!/^\d+(\.\d{1,6})?$/.test(t)) return null; return unitsOf(t);
+}
 
 /* ---------- depósito ---------- */
 $('dCopy').onclick=async()=>{
@@ -585,7 +682,7 @@ async function openWallet(){
   if(!wAddr){ wShow('w-login'); return }
   $('wAddr').textContent=wAddr;
   $('wExplorer').href=W.chain.explorer+'/address/'+wAddr;
-  wShow('w-main'); refreshWallet();
+  wShow('w-main'); refreshWallet(); if(signedIn) refreshAll();
 }
 async function refreshWallet(){
   try{
@@ -654,9 +751,10 @@ $('wExport').onclick=async()=>{
   exportBusy=false; $('wExport').disabled=false;
   if(exportCleanup && $('wExport').textContent==='Abrindo janela segura…') $('wExport').textContent='Fechar';
 };
+function wipeWallet(){ wAddr=null; wBal=null; P=null; act=null; apyV=null; wStarted=false; resetExport(); }
 $('wOut').onclick=async()=>{
   try{ if(W) await W.signOut() }catch(e){}
-  wAddr=null; wBal=null; wStarted=false; $('w-code').classList.add('hide'); wShow('w-login');
+  wipeWallet(); gate='login'; renderAll(); $('w-code').classList.add('hide'); wShow('w-login');
 };
 
 /* ---------- brilho do cartão (segue o dedo) ---------- */
@@ -685,28 +783,26 @@ if(ios&&!standalone){
   $('instBtn').classList.add('hide');
 }
 window.addEventListener('offline',()=>$('off').classList.remove('hide'));
-window.addEventListener('online',()=>{ if(signedIn) load() });
+window.addEventListener('online',()=>{ $('off').classList.add('hide'); if(signedIn) refreshAll() });
 if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));
 
 /* ---------- início do app / login ---------- */
-let ticking=false, signedIn=false, decided=false;
+let signedIn=false, decided=false;
 window.startApp=function(email){
   signedIn=true; decided=true; window.flexEmail=email||'';
-  S=null; firstLoad=true; $('nav').classList.remove('hide');
+  gate='load'; $('nav').classList.remove('hide');
   if(email){$('who').textContent=email;$('who').classList.remove('hide');$('out').classList.remove('hide')}
   go(new URLSearchParams(location.search).get('tab')||'home');
-  load();
-  if(!ticking){ticking=true;tick()}
   if(ios&&!standalone&&!dismissed()) $('inst').classList.remove('hide'); else if(deferred) showInstall();
 };
 window.showAuth=function(){
-  signedIn=false; decided=true; S=null; lastRate=null;
+  signedIn=false; decided=true; try{ if(W) W.signOut() }catch(e){} if(typeof wipeWallet==='function') wipeWallet(); gate='load';
   $('nav').classList.add('hide'); $('who').classList.add('hide'); $('out').classList.add('hide'); $('inst').classList.add('hide');
   $('aPass').value=''; $('off').classList.add('hide');
   document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on',v.id==='v-auth'));
   window.scrollTo(0,0);
 };
-document.addEventListener('visibilitychange',()=>{ if(!document.hidden && signedIn) load() });
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden && signedIn) refreshAll() });
 setTimeout(()=>{ if(!decided){ $('off').textContent='Não foi possível carregar o login. Verifique a conexão e recarregue.'; $('off').classList.remove('hide') } },6000);
 </script>
 <script type="module" src="/auth.js"></script>

@@ -14,10 +14,8 @@ import (
 func main() {
 	app := core.New()
 	mux := http.NewServeMux()
-	mux.HandleFunc("/api/account", app.HandleAccount)
-	mux.HandleFunc("/api/quote", app.HandleQuote)
-	mux.HandleFunc("/api/withdraw", app.HandleWithdraw)
-	mux.HandleFunc("/api/deposit", app.HandleSimDeposit)
+	mux.HandleFunc("/api/health", app.HandleHealth)
+	mux.HandleFunc("/api/me", app.HandleMe)
 	_ = mime.AddExtensionType(".webmanifest", "application/manifest+json")
 	files := http.FileServer(http.Dir("public"))
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -30,6 +28,6 @@ func main() {
 	if port == "" {
 		port = "8080"
 	}
-	log.Printf("USDC Flex local em http://localhost:%s", port)
+	log.Printf("Flex local em http://localhost:%s", port)
 	log.Fatal(http.ListenAndServe(":"+port, mux))
 }
