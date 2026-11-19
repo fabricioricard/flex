@@ -113,38 +113,51 @@ func (v *Verifier) key(kid string) (*rsa.PublicKey, error) {
 
 func b64(s string) ([]byte, error) { return base64.RawURLEncoding.DecodeString(s) }
 
+// Claims são os dados do token que o Flex usa.
+type Claims struct {
+	UID           string
+	Email         string
+	EmailVerified bool
+}
+
 // Verify confere assinatura e claims do token e devolve o uid do usuário.
 func (v *Verifier) Verify(token string) (string, error) {
+	c, err := v.VerifyClaims(token)
+	return c.UID, err
+}
+
+// VerifyClaims confere assinatura e claims do token e devolve uid e e-mail.
+func (v *Verifier) VerifyClaims(token string) (Claims, error) {
 	parts := strings.Split(token, ".")
 	if len(parts) != 3 {
-		return "", errors.New("token malformado")
+		return Claims{}, errors.New("token malformado")
 	}
 	hb, err := b64(parts[0])
 	if err != nil {
-		return "", errors.New("token malformado")
+		return Claims{}, errors.New("token malformado")
 	}
 	var h struct {
 		Alg string `json:"alg"`
 		Kid string `json:"kid"`
 	}
 	if json.Unmarshal(hb, &h) != nil || h.Alg != "RS256" || h.Kid == "" {
-		return "", errors.New("cabeçalho inválido")
+		return Claims{}, errors.New("cabeçalho inválido")
 	}
 	pub, err := v.key(h.Kid)
 	if err != nil {
-		return "", err
+		return Claims{}, err
 	}
 	sig, err := b64(parts[2])
 	if err != nil {
-		return "", errors.New("assinatura inválida")
+		return Claims{}, errors.New("assinatura inválida")
 	}
 	sum := sha256.Sum256([]byte(parts[0] + "." + parts[1]))
 	if rsa.VerifyPKCS1v15(pub, crypto.SHA256, sum[:], sig) != nil {
-		return "", errors.New("assinatura inválida")
+		return Claims{}, errors.New("assinatura inválida")
 	}
 	pb, err := b64(parts[1])
 	if err != nil {
-		return "", errors.New("token malformado")
+		return Claims{}, errors.New("token malformado")
 	}
 	var c struct {
 		Aud      string `json:"aud"`
@@ -153,23 +166,25 @@ func (v *Verifier) Verify(token string) (string, error) {
 		Exp      int64  `json:"exp"`
 		Iat      int64  `json:"iat"`
 		AuthTime int64  `json:"auth_time"`
+		Email    string `json:"email"`
+		Verified bool   `json:"email_verified"`
 	}
 	if json.Unmarshal(pb, &c) != nil {
-		return "", errors.New("token malformado")
+		return Claims{}, errors.New("token malformado")
 	}
 	now := time.Now().Unix()
 	const skew = 60
 	switch {
 	case c.Aud != v.projectID:
-		return "", errors.New("audiência inválida")
+		return Claims{}, errors.New("audiência inválida")
 	case c.Iss != "https://securetoken.google.com/"+v.projectID:
-		return "", errors.New("emissor inválido")
+		return Claims{}, errors.New("emissor inválido")
 	case c.Sub == "" || len(c.Sub) > 128:
-		return "", errors.New("usuário inválido")
+		return Claims{}, errors.New("usuário inválido")
 	case c.Exp <= now-skew:
-		return "", errors.New("token expirado")
+		return Claims{}, errors.New("token expirado")
 	case c.Iat > now+skew || c.AuthTime > now+skew:
-		return "", errors.New("token do futuro")
+		return Claims{}, errors.New("token do futuro")
 	}
-	return c.Sub, nil
+	return Claims{UID: c.Sub, Email: strings.ToLower(c.Email), EmailVerified: c.Verified}, nil
 }

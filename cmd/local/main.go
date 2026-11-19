@@ -16,6 +16,9 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/health", app.HandleHealth)
 	mux.HandleFunc("/api/me", app.HandleMe)
+	mux.HandleFunc("/api/support", app.HandleSupport)
+	mux.HandleFunc("/api/admin-support", app.HandleAdminSupport)
+	mux.HandleFunc("/api/whoami", app.HandleWhoAmI)
 	_ = mime.AddExtensionType(".webmanifest", "application/manifest+json")
 	files := http.FileServer(http.Dir("public"))
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

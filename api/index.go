@@ -21,6 +21,12 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		app.HandleHealth(w, r)
 	case "me":
 		app.HandleMe(w, r)
+	case "support":
+		app.HandleSupport(w, r)
+	case "admin-support":
+		app.HandleAdminSupport(w, r)
+	case "whoami":
+		app.HandleWhoAmI(w, r)
 	default:
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNotFound)

@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><title>Flex · Painel do suporte</title>
+<style>
+:root{--night:#0B0A1E;--s1:#14132C;--s2:#1C1B3A;--s3:#272550;--line:rgba(255,255,255,.12);--tx:#F3F2FF;--mut:#9C9AC4;--teal:#2EE6C5;--pink:#FF7391}
+*{box-sizing:border-box}body{margin:0;background:var(--night);color:var(--tx);font:15px/1.45 system-ui,sans-serif}
+.wrap{max-width:900px;margin:0 auto;padding:16px}
+h1{font-size:20px;margin:0 0 12px}
+input,textarea,button{font:inherit;color:var(--tx)}
+input,textarea{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--s1);margin-bottom:10px}
+button{min-height:44px;padding:0 18px;border-radius:12px;border:0;background:var(--teal);color:#0B0A1E;font-weight:700;cursor:pointer}
+button.sec{background:var(--s2);color:var(--tx);border:1px solid var(--line)}button:disabled{opacity:.5}
+.row{display:flex;gap:10px;flex-wrap:wrap}.row>*{flex:1}
+.grid{display:grid;grid-template-columns:320px 1fr;gap:14px}@media(max-width:760px){.grid{grid-template-columns:1fr}.grid.open #list{display:none}.grid:not(.open) #conv{display:none}}
+.card{background:var(--s1);border:1px solid var(--line);border-radius:16px;padding:14px}
+.th{display:block;width:100%;text-align:left;background:transparent;border:0;border-top:1px solid var(--line);border-radius:0;padding:12px 4px;min-height:0;color:var(--tx);font-weight:400}
+.th:first-child{border-top:0}.th.on{background:var(--s2)}
+.th b{display:flex;justify-content:space-between;gap:8px}.th small{color:var(--mut);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wait{color:var(--pink);font-size:12px;font-weight:700}
+.chat{display:flex;flex-direction:column;gap:8px;max-height:55vh;overflow-y:auto;margin:10px 0}
+.bub{max-width:85%;padding:9px 12px;border-radius:14px;white-space:pre-wrap;overflow-wrap:anywhere}.bub small{display:block;opacity:.65;font-size:11px;margin-top:3px}
+.bub.user{align-self:flex-start;background:var(--s2)}.bub.admin{align-self:flex-end;background:var(--s3)}
+.mut{color:var(--mut)}.err{color:var(--pink)}.hide{display:none!important}
+a{color:var(--teal)}
+</style></head><body><div class="wrap">
+<h1>Painel do suporte</h1>
+<div id="login" class="card hide">
+  <p class="mut">Entre com a conta da equipe.</p>
+  <input id="e" type="email" autocomplete="email" placeholder="e-mail"><input id="p" type="password" autocomplete="current-password" placeholder="senha">
+  <div class="row"><button id="in" type="button">Entrar</button><button id="g" class="sec" type="button">Entrar com Google</button></div>
+  <p id="lm" class="err" role="status"></p>
+</div>
+<div id="denied" class="card hide"><p>Esta conta não tem acesso ao painel.</p><p class="mut" id="dm"></p><button id="out1" class="sec" type="button">Sair</button></div>
+<div id="app" class="hide">
+  <div class="row" style="margin-bottom:10px;align-items:center"><span class="mut" id="me"></span><button id="out2" class="sec" type="button" style="flex:none">Sair</button></div>
+  <div class="grid" id="grid">
+    <div class="card" id="list"><div id="threads"></div><p class="mut" id="empty">Carregando…</p></div>
+    <div class="card" id="conv">
+      <button id="back" class="sec" type="button" style="min-height:36px;margin-bottom:8px">← Conversas</button>
+      <div id="head" class="mut">Escolha uma conversa.</div>
+      <div id="chat" class="chat"></div>
+      <div id="reply" class="hide"><textarea id="t" rows="3" maxlength="2000" placeholder="Responder…"></textarea><button id="send" type="button">Enviar resposta</button><p id="rm" class="err" role="status"></p></div>
+    </div>
+  </div>
+</div>
+</div>
+<script type="module">
+import { firebaseConfig } from './firebase-config.js';
+const SDK='https://www.gstatic.com/firebasejs/10.14.1/';
+const $=id=>document.getElementById(id);
+const { initializeApp }=await import(SDK+'firebase-app.js');
+const { getAuth,onAuthStateChanged,signInWithEmailAndPassword,signInWithPopup,GoogleAuthProvider,signOut }=await import(SDK+'firebase-auth.js');
+const auth=getAuth(initializeApp(firebaseConfig));
+let cur=null,timer=null,lastKey='';
+async function api(path,opts={}){
+  const tok=await auth.currentUser.getIdToken();
+  const r=await fetch('/api/'+path,{...opts,headers:{'content-type':'application/json',Authorization:'Bearer '+tok}});
+  let j={};try{j=await r.json()}catch(e){}
+  if(!r.ok)throw new Error(j.error||('Erro '+r.status));return j;
+}
+const fmt=d=>new Date(d).toLocaleString('pt-BR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+const short=a=>a?a.slice(0,6)+'…'+a.slice(-4):'';
+function show(id){['login','denied','app'].forEach(x=>$(x).classList.toggle('hide',x!==id))}
+async function loadThreads(){
+  try{
+    const j=await api('admin-support'); const box=$('threads'); box.textContent='';
+    $('empty').classList.toggle('hide',j.threads.length>0); $('empty').textContent='Nenhuma conversa ainda.';
+    for(const t of j.threads){
+      const b=document.createElement('button');b.type='button';b.className='th'+(cur&&cur.uid===t.uid?' on':'');
+      const l=document.createElement('b');const n=document.createElement('span');n.textContent=t.email||t.uid;l.appendChild(n);
+      if(t.lastFrom==='user'){const w=document.createElement('span');w.className='wait';w.textContent='AGUARDA';l.appendChild(w)}
+      const s=document.createElement('small');s.textContent=(t.lastFrom==='admin'?'Você: ':'')+t.lastText;
+      const d=document.createElement('small');d.textContent=fmt(t.lastAt)+(t.addr?' · '+short(t.addr):'');
+      b.append(l,s,d);b.onclick=()=>open(t);box.appendChild(b);
+    }
+  }catch(e){$('empty').classList.remove('hide');$('empty').textContent=e.message}
+}
+async function open(t){
+  cur=t;lastKey='';$('grid').classList.add('open');$('reply').classList.remove('hide');$('rm').textContent='';
+  const h=$('head');h.textContent='';h.append(document.createTextNode(t.email||t.uid));
+  if(t.addr){h.append(document.createTextNode(' · '));const a=document.createElement('a');a.href='https://basescan.org/address/'+t.addr;a.target='_blank';a.rel='noopener';a.textContent=short(t.addr);h.appendChild(a)}
+  await loadConv();loadThreads();
+}
+async function loadConv(){
+  if(!cur)return;
+  try{
+    const j=await api('admin-support?uid='+encodeURIComponent(cur.uid));
+    const key=j.messages.length+':'+(j.messages.at(-1)?.ts||'');if(key===lastKey)return;lastKey=key;
+    const c=$('chat');c.textContent='';
+    for(const m of j.messages){const b=document.createElement('div');b.className='bub '+m.from;b.append(document.createTextNode(m.text));const s=document.createElement('small');s.textContent=(m.from==='admin'?'Equipe':'Usuário')+' · '+fmt(m.ts);b.appendChild(s);c.appendChild(b)}
+    c.scrollTop=c.scrollHeight;
+  }catch(e){$('rm').textContent=e.message}
+}
+$('send').onclick=async()=>{
+  const text=$('t').value.trim();if(!text||!cur)return;$('send').disabled=true;$('rm').textContent='';
+  try{await api('admin-support',{method:'POST',body:JSON.stringify({uid:cur.uid,text})});$('t').value='';lastKey='';await loadConv();loadThreads()}
+  catch(e){$('rm').textContent=e.message}$('send').disabled=false;
+};
+$('back').onclick=()=>$('grid').classList.remove('open');
+const lm=t=>$('lm').textContent=t;
+$('in').onclick=()=>signInWithEmailAndPassword(auth,$('e').value.trim(),$('p').value).catch(()=>lm('E-mail ou senha incorretos.'));
+$('g').onclick=()=>signInWithPopup(auth,new GoogleAuthProvider()).catch(()=>lm('Não foi possível entrar com o Google.'));
+$('out1').onclick=$('out2').onclick=()=>signOut(auth);
+onAuthStateChanged(auth,async u=>{
+  clearInterval(timer);cur=null;
+  if(!u){show('login');return}
+  try{
+    const w=await api('whoami');
+    if(!w.admin){$('dm').textContent=(w.email||'')+' (o e-mail precisa estar verificado e listado em ADMIN_EMAILS)';show('denied');return}
+    $('me').textContent=w.email;show('app');loadThreads();
+    timer=setInterval(()=>{if(!document.hidden){loadThreads();loadConv()}},8000);
+  }catch(e){$('dm').textContent=e.message;show('denied')}
+});
+</script></body></html>

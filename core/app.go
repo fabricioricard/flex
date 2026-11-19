@@ -16,15 +16,25 @@ import (
 type App struct {
 	auth    *Verifier
 	initErr error
+	support SupportStore
+	admins  map[string]bool
 }
 
 // New monta o app a partir das variáveis de ambiente.
 func New() *App {
-	a := &App{}
+	a := &App{admins: adminSet()}
 	if pid := os.Getenv("FIREBASE_PROJECT_ID"); pid != "" {
 		a.auth = NewVerifier(pid)
 	} else if os.Getenv("VERCEL") != "" {
 		a.initErr = errors.New("login não configurado (FIREBASE_PROJECT_ID)")
+	}
+	// Suporte: Firestore na Vercel (chave de serviço); em memória só no desenvolvimento local.
+	if raw := os.Getenv("FIREBASE_SERVICE_ACCOUNT"); raw != "" {
+		if fs, err := NewFirestoreSupport(raw); err == nil {
+			a.support = fs
+		}
+	} else if os.Getenv("VERCEL") == "" {
+		a.support = NewMemSupport()
 	}
 	return a
 }

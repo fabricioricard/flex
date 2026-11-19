@@ -185,6 +185,22 @@ details.card[open]>summary::after{content:"−"}
 .tiles .k{display:block}
 @media (max-width:460px){.who{display:none}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* suporte */
+textarea{width:100%;min-height:84px;padding:14px 16px;border-radius:16px;border:1px solid var(--line2);background:var(--night);color:var(--tx);font:inherit;font-size:16px;resize:vertical}
+textarea::placeholder{color:#6d6b99}
+textarea:focus{outline:2px solid var(--teal);outline-offset:0;border-color:transparent}
+.chat{display:flex;flex-direction:column;gap:8px;max-height:46vh;overflow-y:auto;padding:4px 2px;margin:12px 0}
+.bub{max-width:86%;padding:10px 13px;border-radius:16px;font-size:15px;white-space:pre-wrap;overflow-wrap:anywhere}
+.bub small{display:block;margin-top:4px;font-size:11px;opacity:.7}
+.bub.me{align-self:flex-end;background:var(--s3);border-bottom-right-radius:4px}
+.bub.team{align-self:flex-start;background:var(--s2);border:1px solid var(--line2);border-bottom-left-radius:4px}
+.bub.team b{display:block;font-size:12px;color:var(--teal);margin-bottom:2px}
+.chk{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--mut);margin:10px 0 14px}
+.chk input{width:20px;min-height:20px;height:20px;margin:1px 0 0;flex:none;accent-color:var(--teal)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--pink);margin-left:6px;vertical-align:middle}
+.faq p{margin:8px 0 0;color:var(--mut);font-size:14px}
+.faq b{display:block;margin-top:14px;font-size:15px}
 </style>
 </head>
 <body>
@@ -193,6 +209,7 @@ details.card[open]>summary::after{content:"−"}
     <div class="brand"><img src="/icons/icon-192.png" alt="">Flex</div>
     <div class="hdr-r">
       <span id="who" class="who hide"></span>
+      <button id="helpBtn" class="link hide" data-go="suporte" type="button">Ajuda<span class="dot hide" id="helpDot" aria-label="resposta nova"></span></button>
       <button id="out" class="link hide" type="button">Sair</button>
     </div>
   </header>
@@ -438,6 +455,37 @@ details.card[open]>summary::after{content:"−"}
     </div>
   </section>
 
+  <!-- SUPORTE -->
+  <section id="v-suporte" class="view">
+    <div class="card">
+      <h2>Suporte</h2>
+      <div class="lbl">Dúvida ou problema? Escreva aqui. A equipe responde nesta mesma conversa.</div>
+      <div id="sChat" class="chat" role="log" aria-live="polite"></div>
+      <textarea id="sText" maxlength="2000" placeholder="Escreva sua mensagem…" aria-label="Mensagem para o suporte"></textarea>
+      <label class="chk"><input type="checkbox" id="sAddr"><span>Compartilhar o endereço da minha carteira (a equipe consegue ver o problema na blockchain)</span></label>
+      <button class="btn" id="sSend" type="button">Enviar</button>
+      <div class="msg" id="sMsg" role="status"></div>
+      <div class="warn">A equipe nunca pede sua chave privada, a senha nem o código do e-mail. Não envie esses dados aqui.</div>
+    </div>
+    <div class="card faq">
+      <h2>Perguntas frequentes</h2>
+      <b>Onde está o meu dinheiro?</b>
+      <p>Na sua carteira e, se você depositou, no cofre. Tudo na rede Base. O Flex não guarda o seu dinheiro: os saldos são lidos da blockchain.</p>
+      <b>Por que preciso de ETH?</b>
+      <p>É a taxa da rede, de centavos de dólar por operação. Envie cerca de US$ 1 em ETH, pela rede Base, para o endereço da aba Depositar.</p>
+      <b>Quanto rende?</b>
+      <p>A taxa do cofre varia e não é garantida. Há risco de perda. Os detalhes estão em Render, em "Como funciona e riscos".</p>
+      <b>Como resgato o que está no cofre?</b>
+      <p>Em Render, use Resgatar. O USDC volta para a sua carteira, desde que o cofre tenha liquidez.</p>
+      <b>Enviei de uma rede errada. E agora?</b>
+      <p>Conte aqui, com o endereço da transação. Não há garantia de recuperação.</p>
+      <b>Perdi o acesso ao meu e-mail.</b>
+      <p>Só a chave privada exportada permite recuperar a carteira. Por isso o Flex lembra de fazer o backup.</p>
+      <b>E o Pix?</b>
+      <p>Ainda não está disponível.</p>
+    </div>
+  </section>
+
   <!-- PIX -->
   <section id="v-pix" class="view">
     <div class="card soon">
@@ -476,6 +524,8 @@ function go(tab){
   document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.go===tab));
   try{history.replaceState(null,'',tab==='home'?'/':'/?tab='+tab)}catch(e){}
   window.scrollTo(0,0);
+  if(tab!=='suporte') supportClose();
+  if(tab==='suporte') supportOpen();
   if(tab==='carteira') initWallet();
   if(tab==='depositar') loadDeposit();
   if((tab==='home'||tab==='render') && signedIn) refreshAll();
@@ -634,6 +684,63 @@ $('rwBtn').onclick=()=>{
 function parseAmountUI(s){
   let t=String(s||'').trim().replace(',','.'); if(!/^\d+(\.\d{1,6})?$/.test(t)) return null; return unitsOf(t);
 }
+
+
+/* ---------- suporte ---------- */
+let sMsgs=[], sTimer=null, sBusy=false, sFirst=true;
+const SEEN_KEY='flexSeen';
+const seenTs=()=>{try{return Number(localStorage.getItem(SEEN_KEY)||0)}catch(e){return 0}};
+async function sApi(opts){
+  const tok=window.getToken?await window.getToken():null;
+  if(!tok) throw new Error('Entre na sua conta para falar com o suporte.');
+  const r=await fetch('/api/support',{...opts,headers:{'content-type':'application/json',Authorization:'Bearer '+tok}});
+  let j={}; try{j=await r.json()}catch(e){}
+  if(!r.ok) throw new Error(j.error||'Não foi possível falar com o suporte agora.');
+  return j;
+}
+function latestTeamTs(){ let t=0; for(const m of sMsgs) if(m.from==='admin') t=Math.max(t,Date.parse(m.ts)||0); return t }
+function updateDot(){ $('helpDot').classList.toggle('hide',!(latestTeamTs()>seenTs()) || $('v-suporte').classList.contains('on')) }
+function drawChat(){
+  const el=$('sChat'), near=el.scrollHeight-el.scrollTop-el.clientHeight<80;
+  el.textContent='';
+  if(!sMsgs.length){ const d=document.createElement('div'); d.className='empty'; d.textContent='Nenhuma mensagem ainda. Escreva abaixo e responderemos aqui.'; el.appendChild(d) }
+  for(const m of sMsgs){
+    const b=document.createElement('div'); b.className='bub '+(m.from==='admin'?'team':'me');
+    if(m.from==='admin'){ const n=document.createElement('b'); n.textContent='Equipe Flex'; b.appendChild(n) }
+    b.appendChild(document.createTextNode(m.text));
+    const s=document.createElement('small'); s.textContent=new Date(m.ts).toLocaleString('pt-BR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}); b.appendChild(s);
+    el.appendChild(b);
+  }
+  if(near||sFirst) el.scrollTop=el.scrollHeight;
+}
+async function loadSupport(quiet){
+  if(sBusy) return;
+  try{
+    const j=await sApi({method:'GET'}); sMsgs=j.messages||[];
+    if($('v-suporte').classList.contains('on')){ drawChat(); sFirst=false; try{localStorage.setItem(SEEN_KEY,String(Math.max(latestTeamTs(),seenTs())))}catch(e){} }
+    updateDot();
+  }catch(e){
+    if(!quiet){ wMsg($('sMsg'),e.message,false) }
+  }
+}
+function supportOpen(){ sFirst=true; $('sMsg').textContent=''; $('sMsg').className='msg'; drawChat(); loadSupport(false); clearInterval(sTimer); sTimer=setInterval(()=>{ if(!document.hidden) loadSupport(true) },8000); updateDot() }
+function supportClose(){ clearInterval(sTimer); sTimer=null }
+$('sSend').onclick=async()=>{
+  const m=$('sMsg'), box=$('sText'), text=box.value.trim();
+  m.textContent=''; m.className='msg';
+  if(!text){ wMsg(m,'Escreva a sua mensagem.',false); return }
+  sBusy=true; $('sSend').disabled=true; $('sSend').textContent='Enviando…';
+  try{
+    const body={text}; if($('sAddr').checked && wAddr) body.addr=wAddr;
+    const j=await sApi({method:'POST',body:JSON.stringify(body)});
+    sMsgs.push(j.message); box.value=''; sFirst=true; drawChat(); sFirst=false;
+  }catch(e){ wMsg(m,e.message,false) }
+  sBusy=false; $('sSend').disabled=false; $('sSend').textContent='Enviar';
+};
+/* aviso de resposta nova (sem abrir o chat) */
+let sBadgeTimer=null;
+function startBadge(){ clearInterval(sBadgeTimer); loadSupport(true); sBadgeTimer=setInterval(()=>{ if(!document.hidden && !$('v-suporte').classList.contains('on')) loadSupport(true) },90000) }
+function stopBadge(){ clearInterval(sBadgeTimer); sBadgeTimer=null; supportClose(); sMsgs=[]; $('helpDot').classList.add('hide') }
 
 /* ---------- depósito ---------- */
 $('dCopy').onclick=async()=>{
@@ -810,12 +917,13 @@ window.startApp=function(email){
   signedIn=true; decided=true; window.flexEmail=email||'';
   gate='load'; $('nav').classList.remove('hide');
   if(email){$('who').textContent=email;$('who').classList.remove('hide');$('out').classList.remove('hide')}
+  $('helpBtn').classList.remove('hide'); startBadge();
   go(new URLSearchParams(location.search).get('tab')||'home');
   if(ios&&!standalone&&!dismissed()) $('inst').classList.remove('hide'); else if(deferred) showInstall();
 };
 window.showAuth=function(){
   signedIn=false; decided=true; try{ if(W) W.signOut() }catch(e){} if(typeof wipeWallet==='function') wipeWallet(); gate='load';
-  $('nav').classList.add('hide'); $('who').classList.add('hide'); $('out').classList.add('hide'); $('inst').classList.add('hide');
+  $('nav').classList.add('hide'); $('who').classList.add('hide'); $('out').classList.add('hide'); $('helpBtn').classList.add('hide'); stopBadge(); $('inst').classList.add('hide');
   $('aPass').value=''; $('off').classList.add('hide');
   document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on',v.id==='v-auth'));
   window.scrollTo(0,0);
