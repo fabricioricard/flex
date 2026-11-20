@@ -51,7 +51,8 @@ const $=id=>document.getElementById(id);
 const { initializeApp }=await import(SDK+'firebase-app.js');
 const { getAuth,onAuthStateChanged,signInWithEmailAndPassword,signInWithPopup,GoogleAuthProvider,signOut }=await import(SDK+'firebase-auth.js');
 const auth=getAuth(initializeApp(firebaseConfig));
-let cur=null,timer=null,lastKey='';
+let cur=null,timer=null,timer2=null,lastKey='',lastWait=-1,actx=null;
+function beep(){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const o=actx.createOscillator(),g=actx.createGain();o.frequency.value=880;g.gain.value=.08;o.connect(g);g.connect(actx.destination);o.start();o.stop(actx.currentTime+.15)}catch(e){}}
 async function api(path,opts={}){
   const tok=await auth.currentUser.getIdToken();
   const r=await fetch('/api/'+path,{...opts,headers:{'content-type':'application/json',Authorization:'Bearer '+tok}});
@@ -64,6 +65,9 @@ function show(id){['login','denied','app'].forEach(x=>$(x).classList.toggle('hid
 async function loadThreads(){
   try{
     const j=await api('admin-support'); const box=$('threads'); box.textContent='';
+    const wait=j.threads.filter(t=>t.lastFrom==='user').length;
+    document.title=(wait?'('+wait+') ':'')+'Flex · Painel do suporte';
+    if(lastWait>=0&&wait>lastWait)beep(); lastWait=wait;
     $('empty').classList.toggle('hide',j.threads.length>0); $('empty').textContent='Nenhuma conversa ainda.';
     for(const t of j.threads){
       const b=document.createElement('button');b.type='button';b.className='th'+(cur&&cur.uid===t.uid?' on':'');
@@ -102,13 +106,13 @@ $('in').onclick=()=>signInWithEmailAndPassword(auth,$('e').value.trim(),$('p').v
 $('g').onclick=()=>signInWithPopup(auth,new GoogleAuthProvider()).catch(()=>lm('Não foi possível entrar com o Google.'));
 $('out1').onclick=$('out2').onclick=()=>signOut(auth);
 onAuthStateChanged(auth,async u=>{
-  clearInterval(timer);cur=null;
+  clearInterval(timer);clearInterval(timer2);cur=null;lastWait=-1;
   if(!u){show('login');return}
   try{
     const w=await api('whoami');
     if(!w.admin){$('dm').textContent=(w.email||'')+' (o e-mail precisa estar verificado e listado em ADMIN_EMAILS)';show('denied');return}
     $('me').textContent=w.email;show('app');loadThreads();
-    timer=setInterval(()=>{if(!document.hidden){loadThreads();loadConv()}},8000);
+    timer=setInterval(()=>{if(!document.hidden)loadThreads()},5000);timer2=setInterval(()=>{if(!document.hidden)loadConv()},3000);
   }catch(e){$('dm').textContent=e.message;show('denied')}
 });
 </script></body></html>

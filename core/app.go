@@ -17,12 +17,13 @@ type App struct {
 	auth    *Verifier
 	initErr error
 	support SupportStore
+	tg      *telegram
 	admins  map[string]bool
 }
 
 // New monta o app a partir das variáveis de ambiente.
 func New() *App {
-	a := &App{admins: adminSet()}
+	a := &App{admins: adminSet(), tg: newTelegram()}
 	if pid := os.Getenv("FIREBASE_PROJECT_ID"); pid != "" {
 		a.auth = NewVerifier(pid)
 	} else if os.Getenv("VERCEL") != "" {

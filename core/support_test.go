@@ -188,6 +188,8 @@ func TestFirestoreClient(t *testing.T) {
 			_, _ = w.Write([]byte(`{"documents":[
 			 {"fields":{"from":{"stringValue":"admin"},"text":{"stringValue":"segunda"},"ts":{"timestampValue":"2026-11-19T10:00:02Z"}}},
 			 {"fields":{"from":{"stringValue":"user"},"text":{"stringValue":"primeira"},"ts":{"timestampValue":"2026-11-19T10:00:01Z"}}}]}`))
+		case r.Method == "GET" && strings.HasSuffix(r.URL.Path, "/support_threads/ana"):
+			_, _ = w.Write([]byte(`{"fields":{"adminReadAt":{"timestampValue":"2026-11-19T11:00:00Z"}}}`))
 		case r.Method == "GET":
 			_, _ = w.Write([]byte(`{"documents":[{"name":"projects/p/databases/(default)/documents/support_threads/ana","fields":{"email":{"stringValue":"ana@x.com"},"lastText":{"stringValue":"oi"},"lastFrom":{"stringValue":"user"},"lastAt":{"timestampValue":"2026-11-19T10:00:00Z"}}}]}`))
 		default:
@@ -214,11 +216,18 @@ func TestFirestoreClient(t *testing.T) {
 	if err != nil || len(ts) != 1 || ts[0].UID != "ana" || ts[0].Email != "ana@x.com" {
 		t.Fatalf("threads: %v %+v", err, ts)
 	}
+	rd, err := f.ReadAt(context.Background(), "ana")
+	if err != nil || !rd.Equal(time.Date(2026, 11, 19, 11, 0, 0, 0, time.UTC)) {
+		t.Fatalf("readAt: %v %v", err, rd)
+	}
+	if err := f.MarkRead(context.Background(), "ana", now); err != nil {
+		t.Fatal(err)
+	}
 	if tokens != 1 {
 		t.Fatalf("token deveria ser reaproveitado, pedidos: %d", tokens)
 	}
 	joined := strings.Join(calls, "\n")
-	for _, want := range []string{"POST /v1/projects/p/databases/(default)/documents/support_threads/ana/messages", "PATCH /v1/projects/p/databases/(default)/documents/support_threads/ana?", "orderBy=ts+desc", "updateMask.fieldPaths=email"} {
+	for _, want := range []string{"POST /v1/projects/p/databases/(default)/documents/support_threads/ana/messages", "PATCH /v1/projects/p/databases/(default)/documents/support_threads/ana?", "orderBy=ts+desc", "updateMask.fieldPaths=email", "updateMask.fieldPaths=adminReadAt"} {
 		if !strings.Contains(joined, want) {
 			t.Fatalf("faltou %q em:\n%s", want, joined)
 		}
@@ -230,3 +239,38 @@ func TestFirestoreClient(t *testing.T) {
 }
 
 func mustJSON(s string) string { b, _ := json.Marshal(s); return string(b) }
+
+func TestReadReceiptAndNotify(t *testing.T) {
+	app, idp := supportApp(t)
+	var got []string
+	tg := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.ParseForm()
+		got = append(got, r.URL.Path+"|"+r.Form.Get("chat_id")+"|"+r.Form.Get("text"))
+	}))
+	defer tg.Close()
+	app.tg = &telegram{token: "T0K", chat: "42", api: tg.URL, hc: tg.Client()}
+	ana := idp.token(t, withEmail("ana", "ana@x.com", true))
+	adm := idp.token(t, withEmail("u-adm", "equipe@flex.app", true))
+
+	do(app.HandleSupport, "POST", `{"text":"preciso de ajuda"}`, ana, "")
+	if len(got) != 1 || !strings.Contains(got[0], "/botT0K/sendMessage|42|") || !strings.Contains(got[0], "ana@x.com") || !strings.Contains(got[0], "preciso de ajuda") {
+		t.Fatalf("telegram: %v", got)
+	}
+	read := func() time.Time {
+		var o struct{ ReadAt time.Time }
+		_ = json.Unmarshal(do(app.HandleSupport, "GET", "", ana, "").Body.Bytes(), &o)
+		return o.ReadAt
+	}
+	if !read().IsZero() {
+		t.Fatal("antes de a equipe abrir não pode estar lido")
+	}
+	do(app.HandleAdminSupport, "GET", "", adm, "?uid=ana")
+	if read().IsZero() {
+		t.Fatal("depois de a equipe abrir deveria estar lido")
+	}
+	// sem Telegram configurado, enviar continua funcionando
+	app.tg = nil
+	if w := do(app.HandleSupport, "POST", `{"text":"oi"}`, ana, ""); w.Code != 200 {
+		t.Fatal(w.Code)
+	}
+}

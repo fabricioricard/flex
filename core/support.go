@@ -45,6 +45,10 @@ type SupportStore interface {
 	Messages(ctx context.Context, uid string, limit int) ([]Msg, error)
 	// Threads devolve as conversas mais recentes primeiro.
 	Threads(ctx context.Context, limit int) ([]Thread, error)
+	// ReadAt devolve até quando a equipe leu a conversa (zero se nunca).
+	ReadAt(ctx context.Context, uid string) (time.Time, error)
+	// MarkRead registra que a equipe leu a conversa até t.
+	MarkRead(ctx context.Context, uid string, t time.Time) error
 }
 
 // ---- armazenamento em memória (testes e desenvolvimento local) ----
@@ -53,10 +57,11 @@ type MemSupport struct {
 	mu      sync.Mutex
 	msgs    map[string][]Msg
 	threads map[string]Thread
+	read    map[string]time.Time
 }
 
 func NewMemSupport() *MemSupport {
-	return &MemSupport{msgs: map[string][]Msg{}, threads: map[string]Thread{}}
+	return &MemSupport{msgs: map[string][]Msg{}, threads: map[string]Thread{}, read: map[string]time.Time{}}
 }
 
 func (s *MemSupport) AddMessage(_ context.Context, t Thread, m Msg) error {
@@ -96,6 +101,19 @@ func (s *MemSupport) Threads(_ context.Context, limit int) ([]Thread, error) {
 		out = out[:limit]
 	}
 	return out, nil
+}
+
+func (s *MemSupport) ReadAt(_ context.Context, uid string) (time.Time, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.read[uid], nil
+}
+
+func (s *MemSupport) MarkRead(_ context.Context, uid string, t time.Time) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.read[uid] = t
+	return nil
 }
 
 // ---- validação e rotas ----
@@ -162,7 +180,8 @@ func (a *App) HandleSupport(w http.ResponseWriter, r *http.Request) {
 			errJSON(w, 502, "não foi possível carregar as mensagens agora")
 			return
 		}
-		writeJSON(w, 200, map[string]any{"messages": nonNil(ms)})
+		rd, _ := st.ReadAt(r.Context(), c.UID) // falhar aqui só esconde o "Lido"
+		writeJSON(w, 200, map[string]any{"messages": nonNil(ms), "readAt": rd})
 	case http.MethodPost:
 		var in struct {
 			Text string `json:"text"`
@@ -209,6 +228,7 @@ func (a *App) HandleSupport(w http.ResponseWriter, r *http.Request) {
 			errJSON(w, 502, "não foi possível enviar agora, tente de novo")
 			return
 		}
+		a.notifyTeam(r.Context(), c.Email, text)
 		writeJSON(w, 200, map[string]any{"message": m})
 	default:
 		w.Header().Set("Allow", "GET, POST")
@@ -243,6 +263,20 @@ func (a *App) HandleAdminSupport(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				errJSON(w, 502, "falha ao carregar")
 				return
+			}
+			// Abrir a conversa conta como leitura: o usuário passa a ver "Lido".
+			if n := len(ms); n > 0 {
+				if rd, err := st.ReadAt(r.Context(), uid); err == nil {
+					var lastUser time.Time
+					for _, m := range ms {
+						if m.From == "user" {
+							lastUser = m.TS
+						}
+					}
+					if lastUser.After(rd) {
+						_ = st.MarkRead(r.Context(), uid, time.Now().UTC())
+					}
+				}
 			}
 			writeJSON(w, 200, map[string]any{"messages": nonNil(ms)})
 			return

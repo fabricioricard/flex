@@ -186,21 +186,37 @@ details.card[open]>summary::after{content:"−"}
 @media (max-width:460px){.who{display:none}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 
-/* suporte */
-textarea{width:100%;min-height:84px;padding:14px 16px;border-radius:16px;border:1px solid var(--line2);background:var(--night);color:var(--tx);font:inherit;font-size:16px;resize:vertical}
-textarea::placeholder{color:#6d6b99}
-textarea:focus{outline:2px solid var(--teal);outline-offset:0;border-color:transparent}
-.chat{display:flex;flex-direction:column;gap:8px;max-height:46vh;overflow-y:auto;padding:4px 2px;margin:12px 0}
-.bub{max-width:86%;padding:10px 13px;border-radius:16px;font-size:15px;white-space:pre-wrap;overflow-wrap:anywhere}
-.bub small{display:block;margin-top:4px;font-size:11px;opacity:.7}
-.bub.me{align-self:flex-end;background:var(--s3);border-bottom-right-radius:4px}
-.bub.team{align-self:flex-start;background:var(--s2);border:1px solid var(--line2);border-bottom-left-radius:4px}
-.bub.team b{display:block;font-size:12px;color:var(--teal);margin-bottom:2px}
-.chk{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--mut);margin:10px 0 14px}
-.chk input{width:20px;min-height:20px;height:20px;margin:1px 0 0;flex:none;accent-color:var(--teal)}
+/* suporte (estilo mensageiro) */
+#v-suporte{padding-bottom:0}
+.cw{display:flex;flex-direction:column;background:var(--s1);border:1px solid var(--line);border-radius:24px;overflow:hidden;height:calc(100dvh - 210px - var(--top) - var(--bot));min-height:380px;margin-bottom:14px}
+.ch{display:flex;align-items:center;gap:12px;padding:14px 16px;background:linear-gradient(120deg,rgba(74,134,255,.22),rgba(139,92,255,.2) 55%,rgba(46,230,197,.18));border-bottom:1px solid var(--line)}
+.ch .av{width:40px;height:40px;border-radius:50%;background:var(--flow);display:grid;place-items:center;font-family:var(--display);font-weight:700;color:var(--night);flex:none}
+.ch b{display:block;font-size:16px}.ch span{font-size:12.5px;color:var(--mut)}
+.chat{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding:14px 12px;overscroll-behavior:contain}
+.day{align-self:center;font-size:12px;font-weight:700;color:var(--mut);margin:10px 0 4px}
+.bub{max-width:84%;padding:9px 13px;border-radius:18px;font-size:15px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.4}
+.bub small{display:block;margin-top:3px;font-size:11px;opacity:.7;text-align:right}
+.bub.me{align-self:flex-end;background:#2f5fd0;color:#fff;border-bottom-right-radius:5px}
+.bub.team,.bub.bot{align-self:flex-start;background:var(--s2);border:1px solid var(--line2);border-bottom-left-radius:5px}
+.bub .who{display:block;font-size:12px;font-weight:700;color:var(--teal);margin-bottom:2px}
+.bub.bot .who{color:var(--violet)}
+.rd{align-self:flex-end;font-size:12px;color:var(--mut);display:flex;align-items:center;gap:4px;margin:-2px 4px 4px}
+.rd svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.rd.ok{color:var(--teal)}
+.qr{display:flex;flex-wrap:wrap;gap:8px;align-self:flex-start;max-width:92%;margin:2px 0 6px}
+.qr button{min-height:36px;padding:0 14px;border-radius:18px;border:1px solid var(--teal);background:transparent;color:var(--teal);font-weight:600;font-size:14px;cursor:pointer}
+.qr button:active{background:rgba(46,230,197,.14)}
+.cf{padding:8px 12px 12px;border-top:1px solid var(--line);background:var(--s1)}
+.cf .chk{margin:0 4px 8px;font-size:12px}
+.cin{display:flex;align-items:flex-end;gap:8px;background:var(--night);border:1px solid var(--line2);border-radius:24px;padding:6px 6px 6px 16px}
+.cin:focus-within{outline:2px solid var(--teal);border-color:transparent}
+.cin textarea{flex:1;min-height:0;height:24px;max-height:120px;border:0;background:transparent;padding:8px 0;margin:0;outline:0;border-radius:0;resize:none;font-size:16px;line-height:1.4}
+.cin textarea:focus{outline:0}
+.cin button{flex:none;width:44px;height:44px;border-radius:50%;border:0;background:var(--flow);display:grid;place-items:center;cursor:pointer}
+.cin button:disabled{opacity:.5}.cin button svg{width:22px;height:22px;fill:var(--night)}
+.chk{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--mut)}
+.chk input{width:18px;min-height:18px;height:18px;margin:1px 0 0;flex:none;accent-color:var(--teal)}
 .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--pink);margin-left:6px;vertical-align:middle}
-.faq p{margin:8px 0 0;color:var(--mut);font-size:14px}
-.faq b{display:block;margin-top:14px;font-size:15px}
+textarea{width:100%;padding:14px 16px;border-radius:16px;border:1px solid var(--line2);background:var(--night);color:var(--tx);font:inherit;font-size:16px}
 </style>
 </head>
 <body>
@@ -457,33 +473,19 @@ textarea:focus{outline:2px solid var(--teal);outline-offset:0;border-color:trans
 
   <!-- SUPORTE -->
   <section id="v-suporte" class="view">
-    <div class="card">
-      <h2>Suporte</h2>
-      <div class="lbl">Dúvida ou problema? Escreva aqui. A equipe responde nesta mesma conversa.</div>
+    <div class="cw">
+      <div class="ch"><div class="av" aria-hidden="true">F</div><div><b>Suporte Flex</b><span>Respondemos por aqui</span></div></div>
       <div id="sChat" class="chat" role="log" aria-live="polite"></div>
-      <textarea id="sText" maxlength="2000" placeholder="Escreva sua mensagem…" aria-label="Mensagem para o suporte"></textarea>
-      <label class="chk"><input type="checkbox" id="sAddr"><span>Compartilhar o endereço da minha carteira (a equipe consegue ver o problema na blockchain)</span></label>
-      <button class="btn" id="sSend" type="button">Enviar</button>
-      <div class="msg" id="sMsg" role="status"></div>
-      <div class="warn">A equipe nunca pede sua chave privada, a senha nem o código do e-mail. Não envie esses dados aqui.</div>
+      <div class="cf">
+        <label class="chk"><input type="checkbox" id="sAddr"><span>Compartilhar o endereço da minha carteira com a equipe</span></label>
+        <div class="cin">
+          <textarea id="sText" rows="1" maxlength="2000" placeholder="Escreva a sua mensagem…" aria-label="Mensagem para o suporte"></textarea>
+          <button id="sSend" type="button" aria-label="Enviar"><svg viewBox="0 0 24 24"><path d="M3.4 20.4l17.45-7.48a1 1 0 0 0 0-1.84L3.4 3.6a.993.993 0 0 0-1.39.91L2 9.12c0 .5.37.93.87.99L17 12 2.87 13.88c-.5.07-.87.5-.87 1l.01 4.61c0 .71.73 1.2 1.39.91z"/></svg></button>
+        </div>
+        <div class="msg" id="sMsg" role="status" style="margin:8px 4px 0"></div>
+      </div>
     </div>
-    <div class="card faq">
-      <h2>Perguntas frequentes</h2>
-      <b>Onde está o meu dinheiro?</b>
-      <p>Na sua carteira e, se você depositou, no cofre. Tudo na rede Base. O Flex não guarda o seu dinheiro: os saldos são lidos da blockchain.</p>
-      <b>Por que preciso de ETH?</b>
-      <p>É a taxa da rede, de centavos de dólar por operação. Envie cerca de US$ 1 em ETH, pela rede Base, para o endereço da aba Depositar.</p>
-      <b>Quanto rende?</b>
-      <p>A taxa do cofre varia e não é garantida. Há risco de perda. Os detalhes estão em Render, em "Como funciona e riscos".</p>
-      <b>Como resgato o que está no cofre?</b>
-      <p>Em Render, use Resgatar. O USDC volta para a sua carteira, desde que o cofre tenha liquidez.</p>
-      <b>Enviei de uma rede errada. E agora?</b>
-      <p>Conte aqui, com o endereço da transação. Não há garantia de recuperação.</p>
-      <b>Perdi o acesso ao meu e-mail.</b>
-      <p>Só a chave privada exportada permite recuperar a carteira. Por isso o Flex lembra de fazer o backup.</p>
-      <b>E o Pix?</b>
-      <p>Ainda não está disponível.</p>
-    </div>
+    <div class="warn">A equipe nunca pede sua chave privada, a senha nem o código do e-mail. Não envie esses dados aqui.</div>
   </section>
 
   <!-- PIX -->
@@ -687,7 +689,16 @@ function parseAmountUI(s){
 
 
 /* ---------- suporte ---------- */
-let sMsgs=[], sTimer=null, sBusy=false, sFirst=true;
+const FAQ={
+  'Onde está meu dinheiro?':'Na sua carteira e, se você depositou, no cofre. Tudo na rede Base. O Flex não guarda o seu dinheiro: os saldos são lidos da blockchain.',
+  'Preciso de ETH?':'Sim, para a taxa da rede (centavos de dólar por operação). Envie cerca de US$ 1 em ETH, pela rede Base, para o endereço da aba Depositar.',
+  'Quanto rende?':'A taxa do cofre varia e não é garantida, e há risco de perda. Os detalhes estão em Render, em "Como funciona e riscos".',
+  'Como resgatar?':'Em Render, use Resgatar. O USDC volta para a sua carteira, desde que o cofre tenha liquidez.',
+  'Enviei pela rede errada':'Conte aqui, com o endereço da transação, e a equipe olha. Não há garantia de recuperação.',
+  'Perdi meu e-mail':'Só a chave privada exportada recupera a carteira. Se você exportou, guarde-a. Se não, fale com a equipe.',
+  'E o Pix?':'Ainda não está disponível. Quando estiver, aparece na aba Pix.'
+};
+let sMsgs=[], sReadAt=0, sLocal=[], sTimer=null, sBusy=false, sFirst=true, sTick=0, sActive=Date.now(), sGreeted=false;
 const SEEN_KEY='flexSeen';
 const seenTs=()=>{try{return Number(localStorage.getItem(SEEN_KEY)||0)}catch(e){return 0}};
 async function sApi(opts){
@@ -698,49 +709,90 @@ async function sApi(opts){
   if(!r.ok) throw new Error(j.error||'Não foi possível falar com o suporte agora.');
   return j;
 }
-function latestTeamTs(){ let t=0; for(const m of sMsgs) if(m.from==='admin') t=Math.max(t,Date.parse(m.ts)||0); return t }
+const latestTeamTs=()=>sMsgs.reduce((t,m)=>m.from==='admin'?Math.max(t,Date.parse(m.ts)||0):t,0);
 function updateDot(){ $('helpDot').classList.toggle('hide',!(latestTeamTs()>seenTs()) || $('v-suporte').classList.contains('on')) }
+function dayLabel(ts){
+  const d=new Date(ts), n=new Date(), s=x=>new Date(x.getFullYear(),x.getMonth(),x.getDate()).getTime(), diff=Math.round((s(n)-s(d))/86400000);
+  if(diff===0) return 'Hoje'; if(diff===1) return 'Ontem';
+  const t=d.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'}); return t.charAt(0).toUpperCase()+t.slice(1);
+}
+const hhmm=ts=>new Date(ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+const I_CHECK='<svg viewBox="0 0 24 24"><path d="M2 13l4 4L14 8M10 15l2 2L22 8"/></svg>';
+function chip(label,fn){const b=document.createElement('button');b.type='button';b.textContent=label;b.onclick=fn;return b}
 function drawChat(){
-  const el=$('sChat'), near=el.scrollHeight-el.scrollTop-el.clientHeight<80;
+  const el=$('sChat'), near=el.scrollHeight-el.scrollTop-el.clientHeight<90;
   el.textContent='';
-  if(!sMsgs.length){ const d=document.createElement('div'); d.className='empty'; d.textContent='Nenhuma mensagem ainda. Escreva abaixo e responderemos aqui.'; el.appendChild(d) }
-  for(const m of sMsgs){
-    const b=document.createElement('div'); b.className='bub '+(m.from==='admin'?'team':'me');
-    if(m.from==='admin'){ const n=document.createElement('b'); n.textContent='Equipe Flex'; b.appendChild(n) }
-    b.appendChild(document.createTextNode(m.text));
-    const s=document.createElement('small'); s.textContent=new Date(m.ts).toLocaleString('pt-BR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}); b.appendChild(s);
-    el.appendChild(b);
-  }
+  const items=[
+    ...sMsgs.map(m=>({kind:m.from==='admin'?'team':'me',text:m.text,ts:Date.parse(m.ts)||0,pending:m.pending})),
+    ...sLocal
+  ].sort((x,y)=>x.ts-y.ts);
+  const bub=(it)=>{
+    const b=document.createElement('div'); b.className='bub '+it.kind;
+    if(it.kind==='team'||it.kind==='bot'){ const w=document.createElement('span'); w.className='who'; w.textContent=it.kind==='team'?'Equipe Flex':'Assistente Flex'; b.appendChild(w) }
+    b.appendChild(document.createTextNode(it.text));
+    const s=document.createElement('small'); s.textContent=it.pending?'Enviando…':hhmm(it.ts); b.appendChild(s);
+    return b;
+  };
+  // boas-vindas (só no app, não é gravada)
+  const hi=document.createElement('div'); hi.className='bub bot';
+  const w=document.createElement('span'); w.className='who'; w.textContent='Assistente Flex'; hi.appendChild(w);
+  hi.appendChild(document.createTextNode('Olá! Escolha um assunto abaixo ou escreva a sua mensagem. A equipe responde por aqui.')); el.appendChild(hi);
+  const qr=document.createElement('div'); qr.className='qr';
+  Object.keys(FAQ).forEach(q=>qr.appendChild(chip(q,()=>askFaq(q))));
+  el.appendChild(qr);
+  let lastDay='', lastMeIdx=-1;
+  items.forEach((it,i)=>{ if(it.kind==='me') lastMeIdx=i });
+  items.forEach((it,i)=>{
+    const dl=dayLabel(it.ts);
+    if(dl!==lastDay){ const d=document.createElement('div'); d.className='day'; d.textContent=dl; el.appendChild(d); lastDay=dl }
+    el.appendChild(bub(it));
+    if(it.kind==='bot'&&it.chips){ const q=document.createElement('div'); q.className='qr'; q.appendChild(chip('Falar com a equipe',()=>$('sText').focus())); el.appendChild(q) }
+    if(i===lastMeIdx&&!it.pending){ const r=document.createElement('div'); const read=sReadAt>=it.ts&&sReadAt>0; r.className='rd'+(read?' ok':''); r.innerHTML=read?I_CHECK+'Lido':'Enviado'; el.appendChild(r) }
+  });
   if(near||sFirst) el.scrollTop=el.scrollHeight;
+}
+function askFaq(q){
+  const now=Date.now();
+  sLocal.push({kind:'me',text:q,ts:now,local:true},{kind:'bot',text:FAQ[q],ts:now+1,chips:true});
+  sFirst=true; drawChat(); sFirst=false;
 }
 async function loadSupport(quiet){
   if(sBusy) return;
   try{
-    const j=await sApi({method:'GET'}); sMsgs=j.messages||[];
+    const j=await sApi({method:'GET'}); sMsgs=j.messages||[]; sReadAt=j.readAt?Date.parse(j.readAt)||0:0;
     if($('v-suporte').classList.contains('on')){ drawChat(); sFirst=false; try{localStorage.setItem(SEEN_KEY,String(Math.max(latestTeamTs(),seenTs())))}catch(e){} }
     updateDot();
-  }catch(e){
-    if(!quiet){ wMsg($('sMsg'),e.message,false) }
-  }
+  }catch(e){ if(!quiet) wMsg($('sMsg'),e.message,false) }
 }
-function supportOpen(){ sFirst=true; $('sMsg').textContent=''; $('sMsg').className='msg'; drawChat(); loadSupport(false); clearInterval(sTimer); sTimer=setInterval(()=>{ if(!document.hidden) loadSupport(true) },8000); updateDot() }
+function supportOpen(){
+  sFirst=true; sActive=Date.now(); $('sMsg').textContent=''; $('sMsg').className='msg'; drawChat(); loadSupport(false);
+  clearInterval(sTimer);
+  // 3 s com a conversa ativa; depois de 2 min parado, 9 s
+  sTimer=setInterval(()=>{ if(document.hidden) return; sTick++; if(Date.now()-sActive>120000 && sTick%3) return; loadSupport(true) },3000);
+  updateDot();
+}
 function supportClose(){ clearInterval(sTimer); sTimer=null }
+function growBox(){ const b=$('sText'); b.style.height='24px'; b.style.height=Math.min(b.scrollHeight,120)+'px' }
+$('sText').addEventListener('input',()=>{ growBox(); sActive=Date.now() });
+$('sText').addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey&&matchMedia('(pointer:fine)').matches){ e.preventDefault(); $('sSend').click() } });
 $('sSend').onclick=async()=>{
   const m=$('sMsg'), box=$('sText'), text=box.value.trim();
   m.textContent=''; m.className='msg';
-  if(!text){ wMsg(m,'Escreva a sua mensagem.',false); return }
-  sBusy=true; $('sSend').disabled=true; $('sSend').textContent='Enviando…';
+  if(!text||sBusy) return;
+  sBusy=true; sActive=Date.now(); $('sSend').disabled=true;
+  const tmp={from:'user',text,ts:new Date().toISOString(),pending:true}; sMsgs.push(tmp); box.value=''; growBox(); sFirst=true; drawChat(); sFirst=false;
   try{
     const body={text}; if($('sAddr').checked && wAddr) body.addr=wAddr;
     const j=await sApi({method:'POST',body:JSON.stringify(body)});
-    sMsgs.push(j.message); box.value=''; sFirst=true; drawChat(); sFirst=false;
-  }catch(e){ wMsg(m,e.message,false) }
-  sBusy=false; $('sSend').disabled=false; $('sSend').textContent='Enviar';
+    sMsgs[sMsgs.indexOf(tmp)]=j.message;
+    if(!sGreeted && !sMsgs.some(x=>x.from==='admin')){ sGreeted=true; sLocal.push({kind:'bot',text:'Recebemos a sua mensagem. A equipe responde aqui na conversa. Você também verá um aviso em Ajuda quando chegar a resposta.',ts:Date.now()}) }
+  }catch(e){ sMsgs.splice(sMsgs.indexOf(tmp),1); box.value=text; growBox(); wMsg(m,e.message,false) }
+  sBusy=false; $('sSend').disabled=false; drawChat();
 };
 /* aviso de resposta nova (sem abrir o chat) */
 let sBadgeTimer=null;
-function startBadge(){ clearInterval(sBadgeTimer); loadSupport(true); sBadgeTimer=setInterval(()=>{ if(!document.hidden && !$('v-suporte').classList.contains('on')) loadSupport(true) },90000) }
-function stopBadge(){ clearInterval(sBadgeTimer); sBadgeTimer=null; supportClose(); sMsgs=[]; $('helpDot').classList.add('hide') }
+function startBadge(){ clearInterval(sBadgeTimer); loadSupport(true); sBadgeTimer=setInterval(()=>{ if(!document.hidden && !$('v-suporte').classList.contains('on')) loadSupport(true) },60000) }
+function stopBadge(){ clearInterval(sBadgeTimer); sBadgeTimer=null; supportClose(); sMsgs=[]; sLocal=[]; sReadAt=0; sGreeted=false; $('helpDot').classList.add('hide') }
 
 /* ---------- depósito ---------- */
 $('dCopy').onclick=async()=>{

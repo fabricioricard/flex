@@ -228,3 +228,23 @@ func (f *FirestoreSupport) Threads(ctx context.Context, limit int) ([]Thread, er
 	}
 	return ts, nil
 }
+
+func (f *FirestoreSupport) ReadAt(ctx context.Context, uid string) (time.Time, error) {
+	b, err := f.do(ctx, http.MethodGet, "/support_threads/"+url.PathEscape(uid), nil, nil)
+	if err != nil {
+		return time.Time{}, err
+	}
+	var d fsDoc
+	if err := json.Unmarshal(b, &d); err != nil {
+		return time.Time{}, err
+	}
+	t, _ := time.Parse(time.RFC3339Nano, d.Fields["adminReadAt"].TimestampValue)
+	return t, nil
+}
+
+func (f *FirestoreSupport) MarkRead(ctx context.Context, uid string, t time.Time) error {
+	_, err := f.do(ctx, http.MethodPatch, "/support_threads/"+url.PathEscape(uid),
+		url.Values{"updateMask.fieldPaths": {"adminReadAt"}},
+		map[string]any{"fields": map[string]any{"adminReadAt": tv(t)}})
+	return err
+}
